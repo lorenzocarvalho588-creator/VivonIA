@@ -1,0 +1,898 @@
+import { useState, useEffect, useRef } from "react";
+import {
+  Dumbbell, Utensils, Droplet, Brain, Calendar, Trophy, Flame, Sparkles,
+  Send, User, Home, Plus, Minus, Check, ChevronRight, ChevronLeft, Target,
+  Zap, Award, TrendingUp, X, Crown, BookOpen, Moon, ArrowRight, Loader2,
+  Scale, BarChart3, Medal, Palette, Gift, Bell, Lock, Star, Activity, Copy,
+  Bed, Salad, ClipboardCheck, Rocket, Eye, EyeOff
+} from "lucide-react";
+
+const C = {
+  bg: "#0A0A0A", gold: "#D4AF37", card: "#141414", cardL: "#1F1F1F",
+  border: "rgba(212,175,55,0.18)", white: "#FFFFFF", muted: "#8A8A8A"
+};
+
+const PHRASES = [
+  "A disciplina é a ponte entre metas e conquistas.",
+  "Você não precisa ser extremo, só consistente.",
+  "Pequenos passos diários constroem grandes resultados.",
+  "Hoje é mais um dia para evoluir 1%.",
+  "Seu futuro é construído pelo que você faz agora.",
+  "O corpo realiza o que a mente acredita.",
+  "Constância vence intensidade.",
+  "Foque no progresso, não na perfeição.",
+  "Cada escolha te aproxima ou te afasta do seu melhor.",
+  "A versão que você quer ser começa nas próximas 24h.",
+  "Não conte os dias. Faça os dias contarem.",
+  "Energia vem da ação, não da espera.",
+  "Você é o que repete todos os dias.",
+  "Comprometimento é fazer mesmo sem vontade.",
+  "Evolua todos os dias. Sem exceção."
+];
+
+const GOALS = [
+  { k: "emagrecer", t: "Emagrecer", e: "🔥" },
+  { k: "massa", t: "Ganhar massa", e: "💪" },
+  { k: "manter", t: "Manter a forma", e: "⚖️" },
+  { k: "disciplina", t: "Mais disciplina", e: "🎯" },
+  { k: "performance", t: "Performance", e: "⚡" },
+];
+const LEVELS = [
+  { k: "iniciante", t: "Iniciante" },
+  { k: "intermediario", t: "Intermediário" },
+  { k: "avancado", t: "Avançado" },
+];
+const HABITS = [
+  { k: "agua", t: "Beber água", icon: Droplet },
+  { k: "sono", t: "Dormir bem", icon: Moon },
+  { k: "treino", t: "Treinar", icon: Dumbbell },
+  { k: "alimentacao", t: "Comer limpo", icon: Utensils },
+  { k: "leitura", t: "Leitura", icon: BookOpen },
+  { k: "estudos", t: "Estudos", icon: Brain },
+];
+
+const MODES = {
+  coach: {
+    name: "Coach Pessoal", short: "Coach", icon: Target,
+    intro: "Sou seu Coach VIVON. Vamos definir e bater suas metas. Me conta o que você quer evoluir hoje.",
+    chips: ["Defina minha meta da semana", "Como manter o foco?"],
+    sys: "Você é o Coach Pessoal do VIVON, plataforma premium de evolução pessoal. Acompanhe metas, motive com firmeza e proponha estratégias práticas e acionáveis. Tom premium, direto, motivador."
+  },
+  nutri: {
+    name: "Nutricionista IA", short: "Nutri", icon: Salad,
+    intro: "Sou o Nutricionista VIVON. Me diz o que você tem em casa ou seu objetivo que eu monto refeições com calorias e macros.",
+    chips: ["Tenho arroz, frango e ovos", "Monte meu cardápio do dia"],
+    sys: "Você é o Nutricionista IA do VIVON. Crie cardápios e refeições brasileiras realistas. SEMPRE estime calorias, proteínas, carboidratos e gorduras. Tom prático e premium. Não dê diagnóstico médico."
+  },
+  trainer: {
+    name: "Personal Trainer IA", short: "Treino", icon: Dumbbell,
+    intro: "Sou seu Personal Trainer VIVON. Me diz se é em casa ou academia, equipamentos e tempo disponível que eu monto seu treino.",
+    chips: ["Treino em casa, 30 min, sem equipamento", "Treino de academia para hipertrofia"],
+    sys: "Você é o Personal Trainer IA do VIVON. Monte treinos com exercícios, séries e repetições adaptados ao local (casa/academia), equipamentos e tempo. Ajuste à progressão e nível. Tom motivador e premium."
+  },
+  planner: {
+    name: "Planejador IA", short: "Plano", icon: Calendar,
+    intro: "Sou o Planejador VIVON. Organizo sua rotina, hábitos, horários e metas. Por onde começamos?",
+    chips: ["Organize minha rotina diária", "Crie meu plano de hábitos"],
+    sys: "Você é o Planejador IA do VIVON. Organize rotinas, hábitos, horários e metas em estruturas claras e realistas, com blocos de tempo. Tom premium e organizado."
+  },
+};
+
+const LEVEL_REWARDS = [
+  { lvl: 3, t: "Tema Bronze", icon: Palette },
+  { lvl: 5, t: "Medalha de Iniciado", icon: Medal },
+  { lvl: 10, t: "Biblioteca: Disciplina", icon: BookOpen },
+  { lvl: 15, t: "Tema Grafite", icon: Palette },
+  { lvl: 20, t: "Medalha de Constância", icon: Medal },
+  { lvl: 30, t: "Mentalidade Avançada", icon: Brain },
+  { lvl: 50, t: "Tema Ouro Puro", icon: Crown },
+  { lvl: 75, t: "Status VIVON Elite", icon: Trophy },
+  { lvl: 100, t: "Lenda VIVON", icon: Crown },
+];
+
+const CHALLENGES = [
+  { k: "7", t: "7 Dias", days: 7, desc: "Uma semana de consistência total." },
+  { k: "21", t: "21 Dias", days: 21, desc: "Tempo de formar um novo hábito." },
+  { k: "30", t: "30 Dias", days: 30, desc: "Uma transformação de um mês inteiro." },
+  { k: "75", t: "75 Hard", days: 75, desc: "Treino 2x, dieta limpa, 3L de água, leitura e foto. Sem exceção." },
+];
+
+const LIBRARY = {
+  Mentalidade: [{ t: "Mentalidade de Crescimento", d: "8 min", lvl: 0 }, { t: "Vencendo o Diálogo Interno", d: "12 min", lvl: 5 }, { t: "Resiliência Inabalável", d: "10 min", lvl: 15 }],
+  Finanças: [{ t: "Primeiros R$ 1.000 investidos", d: "9 min", lvl: 0 }, { t: "Mentalidade de Abundância", d: "11 min", lvl: 10 }, { t: "Liberdade Financeira", d: "15 min", lvl: 30 }],
+  Disciplina: [{ t: "O Poder dos Pequenos Hábitos", d: "7 min", lvl: 0 }, { t: "Disciplina > Motivação", d: "10 min", lvl: 10 }, { t: "Foco Profundo", d: "13 min", lvl: 20 }],
+  Produtividade: [{ t: "Sua Manhã Perfeita", d: "8 min", lvl: 0 }, { t: "Gestão de Energia", d: "9 min", lvl: 5 }, { t: "Sistema de Metas", d: "12 min", lvl: 20 }],
+  Fitness: [{ t: "Fundamentos do Treino", d: "10 min", lvl: 0 }, { t: "Nutrição Inteligente", d: "11 min", lvl: 10 }, { t: "Recomposição Corporal", d: "14 min", lvl: 30 }],
+};
+
+const ACHV = [
+  { id: "start", name: "Primeiro Passo", desc: "Iniciou sua jornada", icon: Sparkles, cond: () => true },
+  { id: "firstWorkout", name: "Suado", desc: "1º treino registrado", icon: Dumbbell, cond: s => s.workouts.length >= 1 },
+  { id: "hydrated", name: "Hidratado", desc: "8 copos num dia", icon: Droplet, cond: s => waterToday(s) >= 8 },
+  { id: "ai", name: "Conexão IA", desc: "Conversou com a IA", icon: Brain, cond: s => totalAi(s) >= 1 },
+  { id: "streak3", name: "Constante", desc: "3 dias seguidos", icon: Flame, cond: s => s.streak >= 3 },
+  { id: "streak7", name: "Imparável", desc: "7 dias seguidos", icon: Flame, cond: s => s.streak >= 7 },
+  { id: "lvl5", name: "Nível 5", desc: "Alcançou o nível 5", icon: Crown, cond: s => levelInfo(s.xp).level >= 5 },
+  { id: "perfectDay", name: "Dia Perfeito", desc: "Todos os hábitos num dia", icon: Trophy, cond: s => s.habits.date === today() && HABITS.every(h => s.habits.done[h.k]) },
+  { id: "streak30", name: "Mês de Fogo", desc: "30 dias seguidos", icon: Flame, rare: true, cond: s => s.streak >= 30 },
+  { id: "w100", name: "Centurião", desc: "100 treinos", icon: Dumbbell, rare: true, cond: s => s.workouts.length >= 100 },
+  { id: "ai100", name: "Mente Conectada", desc: "100 conversas com a IA", icon: Brain, rare: true, cond: s => totalAi(s) >= 100 },
+  { id: "score100", name: "Dia Impecável", desc: "Score VIVON 100", icon: Star, rare: true, cond: s => vivonScore(s) >= 100 },
+  { id: "year", name: "Lendário", desc: "365 dias seguidos", icon: Crown, rare: true, cond: s => s.streak >= 365 },
+];
+
+function today() { return new Date().toISOString().slice(0, 10); }
+function yesterday() { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); }
+function lastN(n) { const a = []; for (let i = n - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); a.push(d.toISOString().slice(0, 10)); } return a; }
+function dayLabel(iso) { return ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][new Date(iso + "T12:00").getDay()]; }
+
+function levelInfo(xp) {
+  let level = 1, acc = 0, need = 200;
+  while (xp >= acc + need && level < 100) { acc += need; level++; need = 200 + (level - 1) * 100; }
+  return { level, current: xp - acc, need, pct: Math.min(100, ((xp - acc) / need) * 100) };
+}
+function waterToday(s) { return s.water.date === today() ? s.water.count : 0; }
+function sleepToday(s) { return s.sleep?.date === today() ? s.sleep.hours : 0; }
+function habitsDoneToday(s) { return s.habits.date === today() ? HABITS.filter(h => s.habits.done[h.k]).length : 0; }
+function workoutToday(s) { return s.workouts.some(w => w.date === today()); }
+function mealToday(s) { return s.meals.some(m => m.date === today()); }
+function aiToday(s) { return s.aiLog?.date === today() && s.aiLog.count > 0; }
+function totalAi(s) { return Object.values(s.chats).reduce((a, c) => a + c.filter(m => m.role === "user").length, 0); }
+function currentWeight(s) { return s.weights[0]?.val ?? (parseFloat(s.profile.weight) || null); }
+function startWeight(s) { return parseFloat(s.profile.weight) || s.weights[s.weights.length - 1]?.val || null; }
+function consistency(s) { const days = lastN(7); const active = days.filter(d => (s.xpByDate[d] || 0) > 0).length; return Math.round((active / 7) * 100); }
+
+function vivonScore(s) {
+  const water = Math.min(1, waterToday(s) / 8) * 20;
+  const sleep = Math.min(1, sleepToday(s) / 8) * 15;
+  const wk = workoutToday(s) ? 20 : 0;
+  const meal = mealToday(s) ? 15 : 0;
+  const hab = (habitsDoneToday(s) / HABITS.length) * 20;
+  const ai = aiToday(s) ? 10 : 0;
+  return Math.round(water + sleep + wk + meal + hab + ai);
+}
+function scoreParts(s) {
+  return [
+    { l: "Água", v: Math.round(Math.min(1, waterToday(s) / 8) * 20), m: 20 },
+    { l: "Sono", v: Math.round(Math.min(1, sleepToday(s) / 8) * 15), m: 15 },
+    { l: "Treino", v: workoutToday(s) ? 20 : 0, m: 20 },
+    { l: "Alimentação", v: mealToday(s) ? 15 : 0, m: 15 },
+    { l: "Hábitos", v: Math.round((habitsDoneToday(s) / HABITS.length) * 20), m: 20 },
+    { l: "IA", v: aiToday(s) ? 10 : 0, m: 10 },
+  ];
+}
+function buildMissions(s) {
+  return [
+    { id: "water", t: "Beber 2L de água", xp: 20, done: waterToday(s) >= 8, icon: Droplet },
+    { id: "workout", t: "Fazer um treino", xp: 30, done: workoutToday(s), icon: Dumbbell },
+    { id: "ai", t: "Conversar com a VIVON AI", xp: 15, done: aiToday(s), icon: Brain },
+    { id: "sleep", t: "Dormir 8 horas", xp: 20, done: sleepToday(s) >= 8, icon: Bed },
+    { id: "checklist", t: "Completar o checklist", xp: 25, done: habitsDoneToday(s) === HABITS.length, icon: ClipboardCheck },
+  ];
+}
+
+/* ───────── TREINOS (VÍDEOS) ───────── */
+const TREINOS = {
+  masculino: [
+    { group: "Peito", exercises: [
+      { name: "Supino reto com barra", sets: "4 x 10", video: null },
+      { name: "Supino inclinado com barra", sets: "4 x 10", video: null },
+      { name: "Supino inclinado com halteres", sets: "3 x 12", video: null },
+      { name: "Supino declinado", sets: "3 x 12", video: null },
+      { name: "Crucifixo reto", sets: "3 x 15", video: null },
+      { name: "Crucifixo inclinado", sets: "3 x 15", video: null },
+      { name: "Crossover na polia", sets: "3 x 15", video: null },
+      { name: "Voador (peck deck)", sets: "3 x 15", video: null },
+      { name: "Pullover", sets: "3 x 12", video: null },
+      { name: "Flexão de braço", sets: "3 x até a falha", video: null },
+    ]},
+    { group: "Costas", exercises: [
+      { name: "Barra fixa", sets: "4 x máx", video: null },
+      { name: "Puxada frontal", sets: "4 x 10", video: null },
+      { name: "Puxada atrás da nuca", sets: "3 x 12", video: null },
+      { name: "Pulldown na polia", sets: "3 x 12", video: null },
+      { name: "Remada curvada", sets: "4 x 10", video: null },
+      { name: "Remada baixa", sets: "3 x 12", video: null },
+      { name: "Remada cavalinho", sets: "3 x 12", video: null },
+      { name: "Remada unilateral (serrote)", sets: "3 x 12", video: null },
+      { name: "Levantamento terra", sets: "4 x 8", video: null },
+      { name: "Encolhimento (trapézio)", sets: "3 x 15", video: null },
+    ]},
+    { group: "Pernas", exercises: [
+      { name: "Agachamento livre", sets: "4 x 10", video: null },
+      { name: "Agachamento no Smith", sets: "3 x 12", video: null },
+      { name: "Leg press 45°", sets: "4 x 12", video: null },
+      { name: "Hack squat", sets: "3 x 12", video: null },
+      { name: "Cadeira extensora", sets: "3 x 15", video: null },
+      { name: "Mesa flexora", sets: "3 x 12", video: null },
+      { name: "Cadeira flexora", sets: "3 x 15", video: null },
+      { name: "Afundo com halteres", sets: "3 x 12 (cada perna)", video: null },
+      { name: "Stiff", sets: "3 x 12", video: null },
+      { name: "Panturrilha em pé", sets: "4 x 20", video: null },
+      { name: "Panturrilha sentado", sets: "4 x 20", video: null },
+    ]},
+    { group: "Ombros", exercises: [
+      { name: "Desenvolvimento militar", sets: "4 x 10", video: null },
+      { name: "Desenvolvimento com halteres", sets: "3 x 12", video: null },
+      { name: "Desenvolvimento Arnold", sets: "3 x 12", video: null },
+      { name: "Elevação lateral", sets: "3 x 15", video: null },
+      { name: "Elevação frontal", sets: "3 x 12", video: null },
+      { name: "Remada alta", sets: "3 x 12", video: null },
+      { name: "Crucifixo invertido", sets: "3 x 15", video: null },
+      { name: "Face pull", sets: "3 x 15", video: null },
+      { name: "Encolhimento", sets: "3 x 15", video: null },
+    ]},
+    { group: "Bíceps", exercises: [
+      { name: "Rosca direta", sets: "3 x 12", video: null },
+      { name: "Rosca alternada", sets: "3 x 12", video: null },
+      { name: "Rosca martelo", sets: "3 x 12", video: null },
+      { name: "Rosca scott", sets: "3 x 12", video: null },
+      { name: "Rosca concentrada", sets: "3 x 12", video: null },
+      { name: "Rosca inversa", sets: "3 x 12", video: null },
+      { name: "Rosca na polia", sets: "3 x 15", video: null },
+      { name: "Rosca 21", sets: "3 séries", video: null },
+    ]},
+    { group: "Tríceps", exercises: [
+      { name: "Tríceps testa", sets: "3 x 12", video: null },
+      { name: "Tríceps corda", sets: "3 x 15", video: null },
+      { name: "Tríceps barra na polia", sets: "3 x 12", video: null },
+      { name: "Tríceps francês", sets: "3 x 12", video: null },
+      { name: "Tríceps coice", sets: "3 x 12", video: null },
+      { name: "Mergulho no banco", sets: "3 x 15", video: null },
+      { name: "Mergulho nas paralelas", sets: "3 x máx", video: null },
+      { name: "Supino fechado", sets: "3 x 12", video: null },
+    ]},
+    { group: "Abdômen", exercises: [
+      { name: "Abdominal supra", sets: "3 x 20", video: null },
+      { name: "Abdominal infra", sets: "3 x 15", video: null },
+      { name: "Abdominal oblíquo", sets: "3 x 20", video: null },
+      { name: "Prancha", sets: "3 x 40s", video: null },
+      { name: "Prancha lateral", sets: "3 x 30s", video: null },
+      { name: "Elevação de pernas", sets: "3 x 15", video: null },
+      { name: "Bicicleta", sets: "3 x 20", video: null },
+      { name: "Roda abdominal", sets: "3 x 12", video: null },
+    ]},
+  ],
+  feminino: [
+    { group: "Glúteos", exercises: [
+      { name: "Hip thrust", sets: "4 x 12", video: null },
+      { name: "Elevação pélvica no solo", sets: "4 x 15", video: null },
+      { name: "Agachamento sumô", sets: "4 x 12", video: null },
+      { name: "Coice na polia", sets: "3 x 15", video: null },
+      { name: "Coice no solo (kickback)", sets: "3 x 20", video: null },
+      { name: "Abdução na máquina", sets: "3 x 20", video: null },
+      { name: "Abdução em pé na polia", sets: "3 x 15", video: null },
+      { name: "Avanço (passada)", sets: "3 x 12 (cada perna)", video: null },
+      { name: "Stiff", sets: "3 x 12", video: null },
+      { name: "Agachamento búlgaro", sets: "3 x 12", video: null },
+    ]},
+    { group: "Quadríceps", exercises: [
+      { name: "Agachamento", sets: "4 x 12", video: null },
+      { name: "Agachamento no Smith", sets: "3 x 12", video: null },
+      { name: "Leg press 45°", sets: "4 x 12", video: null },
+      { name: "Hack squat", sets: "3 x 12", video: null },
+      { name: "Cadeira extensora", sets: "3 x 15", video: null },
+      { name: "Afundo", sets: "3 x 12 (cada perna)", video: null },
+      { name: "Avanço com halteres", sets: "3 x 12", video: null },
+      { name: "Agachamento búlgaro", sets: "3 x 12", video: null },
+    ]},
+    { group: "Posterior de coxa", exercises: [
+      { name: "Stiff", sets: "4 x 12", video: null },
+      { name: "Levantamento terra romeno", sets: "3 x 10", video: null },
+      { name: "Mesa flexora", sets: "3 x 15", video: null },
+      { name: "Cadeira flexora", sets: "3 x 15", video: null },
+      { name: "Flexora em pé", sets: "3 x 15", video: null },
+      { name: "Bom dia", sets: "3 x 12", video: null },
+    ]},
+    { group: "Abdômen", exercises: [
+      { name: "Abdominal supra", sets: "3 x 20", video: null },
+      { name: "Abdominal infra", sets: "3 x 15", video: null },
+      { name: "Abdominal oblíquo", sets: "3 x 20", video: null },
+      { name: "Prancha", sets: "3 x 40s", video: null },
+      { name: "Prancha lateral", sets: "3 x 30s", video: null },
+      { name: "Elevação de pernas", sets: "3 x 15", video: null },
+      { name: "Bicicleta no solo", sets: "3 x 20", video: null },
+      { name: "Canivete", sets: "3 x 15", video: null },
+    ]},
+    { group: "Costas", exercises: [
+      { name: "Puxada frontal", sets: "4 x 12", video: null },
+      { name: "Puxada aberta", sets: "3 x 12", video: null },
+      { name: "Remada baixa", sets: "3 x 12", video: null },
+      { name: "Remada curvada", sets: "3 x 12", video: null },
+      { name: "Remada unilateral", sets: "3 x 12", video: null },
+      { name: "Pulldown", sets: "3 x 15", video: null },
+      { name: "Barra assistida", sets: "3 x 10", video: null },
+      { name: "Encolhimento", sets: "3 x 15", video: null },
+    ]},
+    { group: "Ombros e Braços", exercises: [
+      { name: "Desenvolvimento com halteres", sets: "3 x 12", video: null },
+      { name: "Elevação lateral", sets: "3 x 15", video: null },
+      { name: "Elevação frontal", sets: "3 x 12", video: null },
+      { name: "Crucifixo invertido", sets: "3 x 15", video: null },
+      { name: "Rosca direta", sets: "3 x 15", video: null },
+      { name: "Rosca alternada", sets: "3 x 12", video: null },
+      { name: "Tríceps corda", sets: "3 x 15", video: null },
+      { name: "Tríceps testa", sets: "3 x 12", video: null },
+    ]},
+    { group: "Cardio / Funcional", exercises: [
+      { name: "Burpee", sets: "4 x 12", video: null },
+      { name: "Polichinelo", sets: "4 x 30s", video: null },
+      { name: "Mountain climber", sets: "4 x 30s", video: null },
+      { name: "Escalador", sets: "4 x 30s", video: null },
+      { name: "Agachamento com salto", sets: "4 x 15", video: null },
+      { name: "Afundo com salto", sets: "4 x 12", video: null },
+      { name: "Prancha com toque no ombro", sets: "3 x 20", video: null },
+      { name: "Corrida estacionária", sets: "4 x 40s", video: null },
+    ]},
+  ],
+};
+
+const DEFAULT = {
+  screen: "onboarding", obStep: 0,
+  profile: { name: "", goal: "", level: "", age: "", weight: "", height: "" },
+  xp: 0, streak: 0, lastActive: "", xpByDate: {}, achievements: [],
+  tab: "home",
+  water: { date: "", count: 0 },
+  sleep: { date: "", hours: 0 },
+  habits: { date: "", done: {} },
+  workouts: [], meals: [], weights: [],
+  chats: { coach: [], nutri: [], trainer: [], planner: [] },
+  aiLog: { date: "", count: 0 },
+  missionsClaimed: { date: "", ids: [] },
+  challenge: null,
+  analysis: null,
+};
+
+export default function VivonApp() {
+  const [s, setS] = useState(null);
+  const [toast, setToast] = useState("");
+  const loaded = useRef(false);
+  const toastTimer = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await window.storage.get("vivon-state");
+        setS(r ? { ...DEFAULT, ...JSON.parse(r.value) } : DEFAULT);
+      } catch { setS(DEFAULT); }
+      loaded.current = true;
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!s || !loaded.current) return;
+    window.storage.set("vivon-state", JSON.stringify(s)).catch(() => {});
+  }, [s]);
+
+  useEffect(() => {
+    if (!s || s.screen !== "app") return;
+    const newly = ACHV.filter(a => !s.achievements.includes(a.id) && a.cond(s));
+    if (newly.length) {
+      setS(p => {
+        const t = today(); const bonus = newly.length * 50;
+        return { ...p, achievements: [...p.achievements, ...newly.map(a => a.id)], xp: p.xp + bonus, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + bonus } };
+      });
+      fireToast("🏆 " + newly.map(a => a.name).join(" · "));
+    }
+  }, [s]);
+
+  useEffect(() => {
+    if (!s || s.screen !== "app") return;
+    const t = today();
+    const claimed = s.missionsClaimed?.date === t ? s.missionsClaimed.ids : [];
+    const newly = buildMissions(s).filter(m => m.done && !claimed.includes(m.id));
+    if (newly.length) {
+      setS(p => {
+        const tt = today();
+        const cl = p.missionsClaimed?.date === tt ? p.missionsClaimed.ids : [];
+        const bonus = newly.reduce((a, m) => a + m.xp, 0);
+        return { ...p, xp: p.xp + bonus, xpByDate: { ...p.xpByDate, [tt]: (p.xpByDate[tt] || 0) + bonus }, missionsClaimed: { date: tt, ids: [...cl, ...newly.map(m => m.id)] } };
+      });
+      fireToast("✅ Missão concluída · +" + newly.reduce((a, m) => a + m.xp, 0) + " XP");
+    }
+  }, [s]);
+
+  function fireToast(msg) {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(""), 2600);
+  }
+
+  if (!s) return <Splash />;
+
+  const award = (amount) => setS(p => {
+    const t = today(), y = yesterday();
+    let streak = p.streak, last = p.lastActive;
+    if (last !== t) { streak = last === y ? streak + 1 : 1; last = t; }
+    return { ...p, xp: p.xp + amount, lastActive: last, streak, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + amount } };
+  });
+  const update = (patch) => setS(p => ({ ...p, ...(typeof patch === "function" ? patch(p) : patch) }));
+
+  if (s.screen === "onboarding") return <Onboarding s={s} update={update} award={award} />;
+
+  return (
+    <div style={{ background: C.bg, color: C.white, minHeight: "100vh", fontFamily: "system-ui, -apple-system, sans-serif" }} className="w-full">
+      <GlobalAnim />
+      <div className="mx-auto flex flex-col" style={{ maxWidth: 440, minHeight: "100vh" }}>
+        {toast && (
+          <div className="fixed left-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ top: 16, transform: "translateX(-50%)", background: C.gold, color: "#000", boxShadow: "0 8px 30px rgba(212,175,55,0.4)" }}>
+            {toast}
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto pb-24">
+          {s.tab === "home" && <HomeTab s={s} update={update} />}
+          {s.tab === "track" && <TrackTab s={s} update={update} award={award} />}
+          {s.tab === "treinos" && <TreinosTab />}
+          {s.tab === "dash" && <DashboardTab s={s} setS={setS} />}
+          {s.tab === "ai" && <AITab s={s} setS={setS} award={award} />}
+          {s.tab === "profile" && <ProfileTab s={s} update={update} award={award} fireToast={fireToast} />}
+        </div>
+        <Nav tab={s.tab} setTab={(t) => update({ tab: t })} />
+      </div>
+    </div>
+  );
+}
+
+function GlobalAnim() {
+  return <style>{`
+    @keyframes vFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(0,-22px)}}
+    @keyframes vFloat2{0%,100%{transform:translate(0,0)}50%{transform:translate(-16px,18px)}}
+    @keyframes vFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes vPulse{0%,100%{opacity:.4;transform:scale(.96)}50%{opacity:.85;transform:scale(1.04)}}
+  `}</style>;
+}
+function Splash() { return <div style={{ background: C.bg, minHeight: "100vh" }} className="flex items-center justify-center"><Logo size={42} /></div>; }
+function Logo({ size = 28 }) { return <span style={{ fontSize: size, fontWeight: 800, letterSpacing: "0.18em", color: C.white }}>VIV<span style={{ color: C.gold }}>O</span>N</span>; }
+
+/* ───────── ONBOARDING ───────── */
+function Wrap({ children }) {
+  return (
+    <div style={{ background: C.bg, color: C.white, minHeight: "100vh", position: "relative", overflow: "hidden" }} className="flex flex-col">
+      <GlobalAnim />
+      <div aria-hidden style={{ position: "absolute", top: "-14%", left: "-28%", width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.20), transparent 70%)", filter: "blur(44px)", animation: "vFloat 9s ease-in-out infinite", pointerEvents: "none" }} />
+      <div aria-hidden style={{ position: "absolute", bottom: "-16%", right: "-28%", width: 480, height: 480, borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.13), transparent 70%)", filter: "blur(56px)", animation: "vFloat2 12s ease-in-out infinite", pointerEvents: "none" }} />
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(120% 80% at 50% 0%, transparent 50%, rgba(0,0,0,0.55))", pointerEvents: "none" }} />
+      <div className="mx-auto w-full flex flex-col flex-1 px-6 py-10" style={{ maxWidth: 440, position: "relative", zIndex: 1 }}>{children}</div>
+    </div>
+  );
+}
+function Onboarding({ s, update, award }) {
+  const [p, setP] = useState(s.profile);
+  const step = s.obStep;
+  const set = (k, v) => setP(x => ({ ...x, [k]: v }));
+  const next = () => update({ obStep: step + 1, profile: p });
+  const finish = () => { update({ screen: "app", profile: p, obStep: 0 }); award(100); };
+
+  if (step === 0) return (
+    <Wrap>
+      <div className="flex-1 flex flex-col items-center justify-center text-center" style={{ gap: 30 }}>
+        <div style={{ position: "relative", animation: "vFade .9s ease both" }}>
+          <div aria-hidden style={{ position: "absolute", inset: "-64px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.30), transparent 62%)", filter: "blur(22px)", animation: "vPulse 4.5s ease-in-out infinite" }} />
+          <div style={{ position: "relative" }}><Logo size={58} /></div>
+        </div>
+        <div className="flex flex-col items-center" style={{ gap: 18, animation: "vFade 1s ease both", animationDelay: ".18s" }}>
+          <div className="flex items-center gap-3">
+            <span style={{ height: 1, width: 30, background: `linear-gradient(90deg, transparent, ${C.gold})` }} />
+            <p style={{ color: C.gold, letterSpacing: "0.34em", fontSize: 11, fontWeight: 600 }}>EVOLUA TODOS OS DIAS</p>
+            <span style={{ height: 1, width: 30, background: `linear-gradient(90deg, ${C.gold}, transparent)` }} />
+          </div>
+          <p style={{ color: "#CFCFCF" }} className="text-lg max-w-[280px] leading-relaxed font-light">Corpo, mente, hábitos e disciplina em uma única plataforma movida por inteligência artificial.</p>
+        </div>
+      </div>
+      <div style={{ animation: "vFade 1s ease both", animationDelay: ".34s" }}>
+        <Btn onClick={next}>Começar minha evolução <ArrowRight size={18} /></Btn>
+        <p className="text-center text-xs mt-4" style={{ color: C.muted }}>Leva menos de 1 minuto.</p>
+      </div>
+    </Wrap>
+  );
+  if (step === 1) return (
+    <Wrap>
+      <Header t="Como devemos te chamar?" sub="Vamos personalizar sua jornada." />
+      <input autoFocus value={p.name} onChange={e => set("name", e.target.value)} placeholder="Seu nome" className="w-full rounded-2xl px-5 py-4 text-lg outline-none" style={{ background: C.card, color: C.white, border: `1px solid ${C.border}` }} />
+      <div className="flex-1" /><Btn disabled={!p.name.trim()} onClick={next}>Continuar <ArrowRight size={18} /></Btn>
+    </Wrap>
+  );
+  if (step === 2) return (
+    <Wrap>
+      <Header t="Qual seu objetivo principal?" sub="Isso guia tudo no VIVON." />
+      <div className="grid grid-cols-1 gap-3">{GOALS.map(g => <Choice key={g.k} active={p.goal === g.k} onClick={() => set("goal", g.k)}><span className="text-2xl">{g.e}</span><span className="font-semibold">{g.t}</span></Choice>)}</div>
+      <div className="flex-1" /><Btn disabled={!p.goal} onClick={next}>Continuar <ArrowRight size={18} /></Btn>
+    </Wrap>
+  );
+  if (step === 3) return (
+    <Wrap>
+      <Header t="Qual seu nível atual?" sub="Para calibrar treinos e desafios." />
+      <div className="grid grid-cols-1 gap-3">{LEVELS.map(l => <Choice key={l.k} active={p.level === l.k} onClick={() => set("level", l.k)}><span className="font-semibold">{l.t}</span></Choice>)}</div>
+      <div className="flex-1" /><Btn disabled={!p.level} onClick={next}>Continuar <ArrowRight size={18} /></Btn>
+    </Wrap>
+  );
+  return (
+    <Wrap>
+      <Header t="Seus dados" sub="Opcional, mas deixa a IA mais precisa." />
+      <div className="flex flex-col gap-3">
+        {[["age", "Idade", "anos"], ["weight", "Peso", "kg"], ["height", "Altura", "cm"]].map(([k, lbl, u]) => (
+          <div key={k} className="flex items-center rounded-2xl px-5 py-4" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+            <span style={{ color: C.muted }}>{lbl}</span>
+            <input type="text" value={p[k]} inputMode={k === "weight" ? "decimal" : "numeric"}
+              onChange={e => { let v = e.target.value.replace(/[^0-9.]/g, ""); if (k !== "weight") v = v.replace(/\./g, ""); const parts = v.split("."); if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join(""); set(k, v); }}
+              className="flex-1 ml-4 bg-transparent text-right text-xl font-semibold outline-none" style={{ color: C.white, minWidth: 0 }} placeholder="—" />
+            <span className="ml-3 text-sm" style={{ color: C.muted, minWidth: 30 }}>{u}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex-1" /><Btn onClick={finish}>Entrar no VIVON <Sparkles size={18} /></Btn>
+    </Wrap>
+  );
+}
+function Header({ t, sub }) { return <div className="mb-7" style={{ animation: "vFade .6s ease both" }}><div className="mb-6"><Logo size={26} /></div><h1 className="text-2xl font-bold mb-1.5" style={{ letterSpacing: "-0.01em" }}>{t}</h1><p style={{ color: C.muted }}>{sub}</p></div>; }
+function Choice({ active, onClick, children }) { return <button onClick={onClick} className="flex items-center gap-3 rounded-2xl px-5 py-4 text-left transition" style={{ background: active ? "rgba(212,175,55,0.12)" : C.card, border: `1.5px solid ${active ? C.gold : C.border}`, color: C.white }}>{children}{active && <Check size={18} className="ml-auto" style={{ color: C.gold }} />}</button>; }
+function Btn({ children, onClick, disabled }) { return <button onClick={onClick} disabled={disabled} className="w-full rounded-2xl py-4 font-bold flex items-center justify-center gap-2 transition mt-2" style={{ background: disabled ? C.cardL : `linear-gradient(180deg, #EBCB6E, ${C.gold})`, color: disabled ? C.muted : "#000", cursor: disabled ? "default" : "pointer", boxShadow: disabled ? "none" : "0 12px 38px rgba(212,175,55,0.40)" }}>{children}</button>; }
+
+/* ───────── SHARED UI ───────── */
+function Card({ children, className = "", style = {} }) { return <div className={`rounded-2xl p-4 ${className}`} style={{ background: C.card, border: `1px solid ${C.border}`, ...style }}>{children}</div>; }
+function Stat({ icon: I, v, l }) { return <Card className="flex flex-col items-center gap-1 p-3"><I size={18} style={{ color: C.gold }} /><span className="font-bold text-lg">{v}</span><span className="text-[11px] text-center" style={{ color: C.muted }}>{l}</span></Card>; }
+function Section({ title, icon: I, children, right }) { return <Card><div className="flex items-center justify-between mb-3"><h3 className="font-semibold flex items-center gap-2"><I size={17} style={{ color: C.gold }} />{title}</h3>{right}</div>{children}</Card>; }
+function ScoreRing({ value, size = 132 }) {
+  const r = (size - 18) / 2, circ = 2 * Math.PI * r, off = circ * (1 - value / 100);
+  return (
+    <svg width={size} height={size} style={{ display: "block" }}>
+      <defs><linearGradient id="vg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F0D982" /><stop offset="100%" stopColor={C.gold} /></linearGradient></defs>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.cardL} strokeWidth="9" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#vg)" strokeWidth="9" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={off} transform={`rotate(-90 ${size / 2} ${size / 2})`} style={{ transition: "stroke-dashoffset .6s ease" }} />
+      <text x="50%" y="47%" textAnchor="middle" fontSize="30" fontWeight="800" fill={C.white}>{value}</text>
+      <text x="50%" y="64%" textAnchor="middle" fontSize="11" fill={C.muted}>SCORE</text>
+    </svg>
+  );
+}
+function MiniBars({ dates, data, max }) {
+  const m = Math.max(max || 1, ...dates.map(d => data[d] || 0), 1);
+  return <div className="flex items-end justify-between gap-1" style={{ height: 80 }}>{dates.map(d => { const h = Math.max(4, ((data[d] || 0) / m) * 70); const t = d === today(); return <div key={d} className="flex-1 rounded-sm" style={{ height: h, background: t ? C.gold : "rgba(212,175,55,0.28)" }} />; })}</div>;
+}
+
+/* ───────── HOME ───────── */
+function HomeTab({ s, update }) {
+  const li = levelInfo(s.xp);
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  const phrase = PHRASES[new Date().getDate() % PHRASES.length];
+  const score = vivonScore(s);
+  const missions = buildMissions(s);
+  const doneMissions = missions.filter(m => m.done).length;
+  const [dismissed, setDismissed] = useState(false);
+
+  const nudges = [];
+  if (waterToday(s) < 8 && hour >= 11) nudges.push(`${s.profile.name || "Você"}, ainda não bateu sua meta de água hoje.`);
+  if (li.need - li.current <= 40) nudges.push(`Faltam ${li.need - li.current} XP para o nível ${li.level + 1}.`);
+  if (s.lastActive !== today()) nudges.push("Mantenha sua sequência viva: registre algo hoje.");
+  if (!workoutToday(s) && hour >= 16) nudges.push("Que tal um treino rápido antes de fechar o dia?");
+  const nudge = nudges[0];
+
+  return (
+    <div className="px-5 pt-6">
+      <div className="flex items-center justify-between mb-5">
+        <Logo size={22} />
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: C.card, border: `1px solid ${C.border}` }}><Flame size={15} style={{ color: C.gold }} /><span className="text-sm font-bold">{s.streak}</span></div>
+      </div>
+      <p style={{ color: C.muted }} className="text-sm">{greet},</p>
+      <h1 className="text-2xl font-bold mb-4">{s.profile.name || "atleta"} 👋</h1>
+
+      {nudge && !dismissed && (
+        <div className="rounded-2xl p-3.5 mb-4 flex items-start gap-3" style={{ background: "rgba(212,175,55,0.10)", border: `1px solid ${C.border}` }}>
+          <Bell size={17} style={{ color: C.gold, marginTop: 2 }} /><p className="text-sm flex-1" style={{ color: "#E8DCC0" }}>{nudge}</p><button onClick={() => setDismissed(true)}><X size={16} style={{ color: C.muted }} /></button>
+        </div>
+      )}
+
+      <Card className="mb-4 flex items-center gap-4" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(20,20,20,1))" }}>
+        <ScoreRing value={score} size={108} />
+        <div className="flex-1">
+          <p className="text-sm font-semibold mb-1" style={{ color: C.gold }}>Seu Score VIVON de hoje</p>
+          <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{score >= 85 ? "Dia impecável. Continue assim." : score >= 60 ? "Bom ritmo. Dá pra fechar mais alto." : score >= 30 ? "Você começou. Vamos somar mais pontos." : "Bora pontuar o primeiro ponto do dia."}</p>
+        </div>
+      </Card>
+
+      <Card className="mb-4">
+        <div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><Crown size={18} style={{ color: C.gold }} /><span className="font-bold">Nível {li.level}</span></div><span className="text-sm font-semibold" style={{ color: C.gold }}>{s.xp} XP</span></div>
+        <div className="h-2.5 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${li.pct}%`, background: C.gold }} /></div>
+        <p className="text-xs mt-2" style={{ color: C.muted }}>{li.current} / {li.need} XP para o nível {li.level + 1}</p>
+      </Card>
+
+      <Section title="Missões do dia" icon={Target} right={<span className="text-xs font-semibold" style={{ color: C.gold }}>{doneMissions}/{missions.length}</span>}>
+        <div className="flex flex-col gap-2">
+          {missions.map(m => (
+            <div key={m.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: m.done ? "rgba(212,175,55,0.10)" : C.cardL }}>
+              <m.icon size={16} style={{ color: m.done ? C.gold : C.muted }} /><span className="flex-1 text-sm" style={{ color: m.done ? C.white : "#CFCFCF" }}>{m.t}</span><span className="text-xs font-semibold" style={{ color: m.done ? C.gold : C.muted }}>+{m.xp}</span>{m.done ? <Check size={15} style={{ color: C.gold }} /> : <div style={{ width: 15 }} />}
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <button onClick={() => update({ tab: "treinos" })} className="w-full mt-4 rounded-2xl p-4 flex items-center gap-3 text-left" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(20,20,20,1))", border: `1px solid ${C.border}` }}>
+        <div className="rounded-xl p-2.5" style={{ background: "rgba(212,175,55,0.15)" }}><Dumbbell size={20} style={{ color: C.gold }} /></div>
+        <div className="flex-1"><p className="font-bold">Treinos em vídeo</p><p className="text-xs" style={{ color: C.muted }}>Execução de cada exercício · masculino e feminino</p></div>
+        <ChevronRight size={18} style={{ color: C.muted }} />
+      </button>
+
+      {s.challenge && <div className="mt-4"><ChallengeCard s={s} update={update} compact /></div>}
+
+      <div className="rounded-2xl p-4 my-4" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.02))", border: `1px solid ${C.border}` }}><p className="text-sm italic leading-relaxed" style={{ color: "#E8DCC0" }}>"{phrase}"</p></div>
+
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <Stat icon={Droplet} v={`${waterToday(s)}/8`} l="Água" /><Stat icon={Check} v={`${habitsDoneToday(s)}/6`} l="Hábitos" /><Stat icon={Dumbbell} v={s.workouts.filter(w => w.date === today()).length} l="Treinos" />
+      </div>
+    </div>
+  );
+}
+
+/* ───────── TREINOS TAB ───────── */
+function TreinosTab() {
+  const [gender, setGender] = useState("masculino");
+  const [open, setOpen] = useState(null);
+  const groups = TREINOS[gender];
+  const totalEx = groups.reduce((a, g) => a + g.exercises.length, 0);
+  return (
+    <div className="px-5 pt-6">
+      <h1 className="text-xl font-bold flex items-center gap-2 mb-1"><Dumbbell size={20} style={{ color: C.gold }} />Treinos</h1>
+      <p className="text-sm mb-4" style={{ color: C.muted }}>Vídeos de execução de cada exercício, separados por sexo.</p>
+
+      <div className="flex gap-1 mb-4 p-1 rounded-2xl" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+        {[["masculino", "Masculino"], ["feminino", "Feminino"]].map(([g, lbl]) => (
+          <button key={g} onClick={() => { setGender(g); setOpen(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-bold transition" style={{ background: gender === g ? C.gold : "transparent", color: gender === g ? "#000" : C.muted }}>{lbl}</button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {groups.map(grp => {
+          const filled = grp.exercises.filter(e => e.video).length;
+          return (
+            <div key={grp.group} className="rounded-2xl overflow-hidden" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+              <button onClick={() => setOpen(open === grp.group ? null : grp.group)} className="w-full flex items-center justify-between px-4 py-3.5">
+                <span className="font-semibold flex items-center gap-2"><Dumbbell size={16} style={{ color: C.gold }} />{grp.group}</span>
+                <span className="flex items-center gap-2 text-xs" style={{ color: C.muted }}>{filled}/{grp.exercises.length} vídeos<ChevronRight size={16} style={{ color: C.muted, transform: open === grp.group ? "rotate(90deg)" : "none", transition: "transform .2s" }} /></span>
+              </button>
+              {open === grp.group && <div className="px-4 pb-4 space-y-3">{grp.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} gender={gender} />)}</div>}
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-xs text-center mt-5 leading-relaxed" style={{ color: C.muted }}>{groups.length} grupos · {totalEx} exercícios neste sexo. Cada um tem um espaço reservado — seus vídeos entram aqui automaticamente.</p>
+      <div className="h-2" />
+    </div>
+  );
+}
+function ExerciseRow({ ex, gender }) {
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: C.cardL }}>
+      <div className="px-3 pt-2.5 pb-2"><p className="font-medium text-sm">{ex.name}</p><p className="text-xs" style={{ color: C.muted }}>{ex.sets}</p></div>
+      <div className="px-3 pb-3">
+        {ex.video ? (
+          <video src={ex.video} controls playsInline className="w-full rounded-lg" style={{ aspectRatio: "16/9", background: "#000" }} />
+        ) : (
+          <div className="w-full rounded-lg flex flex-col items-center justify-center gap-1.5" style={{ aspectRatio: "16/9", background: "#000", border: `1.5px dashed ${C.border}` }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill={C.gold}><path d="M8 5v14l11-7z" /></svg>
+            <span className="text-xs font-medium" style={{ color: "#D8D8D8" }}>Aguardando vídeo</span>
+            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>{ex.name} · {gender}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── DASHBOARD ───────── */
+function DashboardTab({ s, setS }) {
+  const li = levelInfo(s.xp);
+  const score = vivonScore(s);
+  const cw = currentWeight(s), iw = startWeight(s);
+  const delta = cw != null && iw != null ? +(cw - iw).toFixed(1) : null;
+  const cons = consistency(s);
+  const [analyzing, setAnalyzing] = useState(false);
+  const goal = GOALS.find(g => g.k === s.profile.goal);
+
+  const analyze = async () => {
+    setAnalyzing(true);
+    const data = `Dados do usuário ${s.profile.name}: objetivo ${goal?.t || "—"}, nível ${li.level}, ${s.xp} XP, sequência ${s.streak} dias, score de hoje ${score}/100, consistência semanal ${cons}%, peso inicial ${iw ?? "—"}kg, peso atual ${cw ?? "—"}kg (variação ${delta ?? "—"}kg), ${s.workouts.length} treinos registrados, ${totalAi(s)} conversas com a IA, hábitos hoje ${habitsDoneToday(s)}/6, água hoje ${waterToday(s)}/8 copos.`;
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, system: "Você é o Analista VIVON. Gere um relatório de evolução curto e premium em português do Brasil, com exatamente 4 seções tituladas: Pontos fortes, Pontos fracos, Sugestões e Próximos passos. Seja específico e use os dados fornecidos. Tom motivador e direto.", messages: [{ role: "user", content: data }] }),
+      });
+      const d = await res.json();
+      const txt = (d.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim() || "Não consegui gerar agora.";
+      setS(p => ({ ...p, analysis: { date: today(), text: txt } }));
+    } catch { setS(p => ({ ...p, analysis: { date: today(), text: "Erro de conexão com a IA. Tente novamente." } })); }
+    finally { setAnalyzing(false); }
+  };
+
+  return (
+    <div className="px-5 pt-6 space-y-4">
+      <h1 className="text-xl font-bold flex items-center gap-2"><BarChart3 size={20} style={{ color: C.gold }} />Meu Dashboard</h1>
+      <Card className="flex items-center gap-4">
+        <ScoreRing value={score} size={120} />
+        <div className="flex-1 space-y-1.5">{scoreParts(s).map(p => (<div key={p.l} className="flex items-center gap-2"><span className="text-xs w-20" style={{ color: C.muted }}>{p.l}</span><div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${(p.v / p.m) * 100}%`, background: C.gold }} /></div></div>))}</div>
+      </Card>
+      <div className="grid grid-cols-4 gap-2"><Stat icon={Crown} v={li.level} l="Nível" /><Stat icon={Zap} v={s.xp} l="XP" /><Stat icon={Flame} v={s.streak} l="Seq." /><Stat icon={Activity} v={`${cons}%`} l="Consist." /></div>
+      <Section title="Evolução semanal" icon={TrendingUp}><MiniBars dates={lastN(7)} data={s.xpByDate} /><div className="flex justify-between mt-1">{lastN(7).map(d => <span key={d} className="text-[10px] flex-1 text-center" style={{ color: d === today() ? C.gold : C.muted }}>{dayLabel(d)}</span>)}</div></Section>
+      <Section title="Evolução mensal" icon={BarChart3}><MiniBars dates={lastN(30)} data={s.xpByDate} /><p className="text-xs mt-2" style={{ color: C.muted }}>XP acumulado nos últimos 30 dias</p></Section>
+      <div className="grid grid-cols-2 gap-3">
+        <Card><div className="flex items-center gap-2 mb-2"><Scale size={16} style={{ color: C.gold }} /><span className="text-sm font-semibold">Peso</span></div><p className="text-2xl font-bold">{cw != null ? `${cw} kg` : "—"}</p><p className="text-xs mt-1" style={{ color: delta == null ? C.muted : delta < 0 ? "#6EE7A8" : delta > 0 ? "#F0A66E" : C.muted }}>{iw != null ? `Inicial ${iw} kg${delta != null ? ` · ${delta > 0 ? "+" : ""}${delta} kg` : ""}` : "Sem registro"}</p></Card>
+        <Card><div className="flex items-center gap-2 mb-2"><Target size={16} style={{ color: C.gold }} /><span className="text-sm font-semibold">Meta</span></div><p className="text-lg font-bold">{goal ? `${goal.e} ${goal.t}` : "—"}</p><p className="text-xs mt-1" style={{ color: C.muted }}>{habitsDoneToday(s)}/6 hábitos · {waterToday(s)}/8 água</p></Card>
+      </div>
+      <Card>
+        <div className="flex items-center justify-between mb-1"><span className="font-semibold flex items-center gap-2"><Sparkles size={17} style={{ color: C.gold }} />IA Analista</span></div>
+        <p className="text-xs mb-3" style={{ color: C.muted }}>Gere um relatório da sua evolução com pontos fortes, fracos e próximos passos.</p>
+        {s.analysis?.text && <div className="rounded-xl p-3 mb-3 text-sm whitespace-pre-wrap leading-relaxed" style={{ background: C.cardL, color: "#E0E0E0", maxHeight: 260, overflowY: "auto" }}>{s.analysis.text}</div>}
+        <button onClick={analyze} disabled={analyzing} className="w-full rounded-xl py-3 font-bold flex items-center justify-center gap-2" style={{ background: analyzing ? C.cardL : `linear-gradient(180deg, #EBCB6E, ${C.gold})`, color: analyzing ? C.muted : "#000" }}>{analyzing ? <><Loader2 size={16} className="animate-spin" /> Analisando...</> : <><Sparkles size={16} /> Analisar minha evolução</>}</button>
+      </Card>
+      <div className="h-2" />
+    </div>
+  );
+}
+
+/* ───────── VIVON AI ───────── */
+function AITab({ s, setS, award }) {
+  const [mode, setMode] = useState("coach");
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scroller = useRef(null);
+  const msgs = s.chats[mode] || [];
+  const M = MODES[mode];
+  useEffect(() => { if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight; }, [msgs, loading]);
+
+  const ctx = () => {
+    const p = s.profile;
+    const g = GOALS.find(x => x.k === p.goal)?.t || "—";
+    const l = LEVELS.find(x => x.k === p.level)?.t || "—";
+    const recent = s.workouts.slice(0, 3).map(w => w.name).join(", ") || "nenhum";
+    return `Contexto real do usuário (use para personalizar): nome ${p.name || "—"}, objetivo ${g}, nível de treino ${l}, idade ${p.age || "—"}, peso atual ${currentWeight(s) ?? "—"}kg, peso inicial ${startWeight(s) ?? "—"}kg, sequência ${s.streak} dias, nível VIVON ${levelInfo(s.xp).level}, score hoje ${vivonScore(s)}/100, treinos recentes: ${recent}, hábitos hoje ${habitsDoneToday(s)}/6. Responda em português do Brasil, objetivo e premium.`;
+  };
+
+  const send = async (preset) => {
+    const text = (preset ?? input).trim();
+    if (!text || loading) return;
+    const history = [...msgs, { role: "user", content: text }];
+    setS(p => ({ ...p, chats: { ...p.chats, [mode]: history }, aiLog: { date: today(), count: (p.aiLog?.date === today() ? p.aiLog.count : 0) + 1 } }));
+    setInput(""); setLoading(true); award(5);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, system: `${M.sys} ${ctx()}`, messages: history.map(m => ({ role: m.role, content: m.content })) }) });
+      const data = await res.json();
+      const reply = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim() || "Não consegui responder agora. Tenta de novo?";
+      setS(p => ({ ...p, chats: { ...p.chats, [mode]: [...history, { role: "assistant", content: reply }] } }));
+    } catch { setS(p => ({ ...p, chats: { ...p.chats, [mode]: [...history, { role: "assistant", content: "Erro de conexão com a IA. Verifique sua rede e tente novamente." }] } })); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="flex flex-col" style={{ height: "calc(100vh - 80px)" }}>
+      <div className="px-5 pt-6 pb-3">
+        <div className="flex items-center gap-2 mb-4"><Brain size={22} style={{ color: C.gold }} /><h1 className="text-xl font-bold">VIVON AI</h1></div>
+        <div className="flex gap-2 overflow-x-auto pb-1">{Object.entries(MODES).map(([k, m]) => (<button key={k} onClick={() => setMode(k)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-full whitespace-nowrap text-sm font-semibold transition" style={{ background: mode === k ? C.gold : C.card, color: mode === k ? "#000" : C.white, border: `1px solid ${mode === k ? C.gold : C.border}` }}><m.icon size={15} />{m.short}</button>))}</div>
+      </div>
+      <div ref={scroller} className="flex-1 overflow-y-auto px-5 space-y-3">
+        {msgs.length === 0 && (<>
+          <Card className="mt-2"><div className="flex items-center gap-2 mb-2"><M.icon size={18} style={{ color: C.gold }} /><span className="font-semibold">{M.name}</span></div><p style={{ color: C.muted }} className="text-sm leading-relaxed">{M.intro}</p></Card>
+          <div className="flex flex-col gap-2">{M.chips.map(c => <button key={c} onClick={() => send(c)} className="text-left rounded-xl px-3.5 py-2.5 text-sm flex items-center justify-between" style={{ background: C.cardL, color: "#D8D8D8" }}>{c}<ChevronRight size={15} style={{ color: C.gold }} /></button>)}</div>
+        </>)}
+        {msgs.map((m, i) => (<div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}><div className="max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap" style={m.role === "user" ? { background: C.gold, color: "#000", borderBottomRightRadius: 4 } : { background: C.card, color: C.white, border: `1px solid ${C.border}`, borderBottomLeftRadius: 4 }}>{m.content}</div></div>))}
+        {loading && <div className="flex justify-start"><div className="rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${C.border}` }}><Loader2 size={18} className="animate-spin" style={{ color: C.gold }} /></div></div>}
+      </div>
+      <div className="px-4 py-3 flex items-center gap-2" style={{ borderTop: `1px solid ${C.border}` }}>
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} placeholder={`Fale com o ${M.short}...`} className="flex-1 rounded-full px-4 py-3 text-sm outline-none" style={{ background: C.card, color: C.white, border: `1px solid ${C.border}` }} />
+        <button onClick={() => send()} disabled={loading || !input.trim()} className="rounded-full p-3 flex-shrink-0" style={{ background: input.trim() && !loading ? C.gold : C.cardL, color: "#000" }}><Send size={18} /></button>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── TRACKING ───────── */
+function TrackTab({ s, update, award }) {
+  const t = today();
+  const water = waterToday(s);
+  const habitsDone = s.habits.date === t ? s.habits.done : {};
+  const sleepH = sleepToday(s);
+  const [wName, setWName] = useState(""); const [wMin, setWMin] = useState("");
+  const [meal, setMeal] = useState(""); const [weight, setWeight] = useState("");
+
+  const setWater = (n) => update(() => ({ water: { date: t, count: Math.max(0, n) } }));
+  const addWater = () => { setWater(water + 1); award(10); };
+  const setSleep = (h) => update(() => ({ sleep: { date: t, hours: Math.max(0, Math.min(14, h)) } }));
+  const toggleHabit = (k) => { const cur = s.habits.date === t ? s.habits.done : {}; const on = !cur[k]; update({ habits: { date: t, done: { ...cur, [k]: on } } }); if (on) award(15); };
+  const logWorkout = () => { if (!wName.trim()) return; update(p => ({ workouts: [{ id: Date.now(), date: t, name: wName.trim(), min: wMin }, ...p.workouts] })); setWName(""); setWMin(""); award(50); };
+  const logMeal = () => { if (!meal.trim()) return; update(p => ({ meals: [{ id: Date.now(), date: t, desc: meal.trim() }, ...p.meals] })); setMeal(""); award(20); };
+  const logWeight = () => { if (!weight) return; update(p => ({ weights: [{ id: Date.now(), date: t, val: parseFloat(weight) }, ...p.weights] })); setWeight(""); award(10); };
+  const lastWeight = s.weights[0];
+  const todayWorkouts = s.workouts.filter(w => w.date === t);
+
+  return (
+    <div className="px-5 pt-6 space-y-4">
+      <h1 className="text-xl font-bold flex items-center gap-2"><Zap size={20} style={{ color: C.gold }} />Evoluir hoje</h1>
+      <Section title="Hidratação" icon={Droplet}><div className="flex items-center justify-between"><div className="flex items-center gap-1">{Array.from({ length: 8 }).map((_, i) => <Droplet key={i} size={20} style={{ color: i < water ? C.gold : C.cardL }} fill={i < water ? C.gold : "none"} />)}</div><div className="flex items-center gap-2"><RoundBtn onClick={() => setWater(water - 1)}><Minus size={16} /></RoundBtn><RoundBtn gold onClick={addWater}><Plus size={16} /></RoundBtn></div></div></Section>
+      <Section title="Sono" icon={Bed} right={<span className="font-bold" style={{ color: C.gold }}>{sleepH}h</span>}><div className="flex items-center gap-2"><RoundBtn onClick={() => setSleep(sleepH - 0.5)}><Minus size={16} /></RoundBtn><div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (sleepH / 8) * 100)}%`, background: C.gold }} /></div><RoundBtn gold onClick={() => setSleep(sleepH + 0.5)}><Plus size={16} /></RoundBtn></div><p className="text-xs mt-2" style={{ color: C.muted }}>Meta: 8 horas</p></Section>
+      <Section title="Hábitos do dia" icon={Check}><div className="grid grid-cols-2 gap-2">{HABITS.map(h => { const on = habitsDone[h.k]; return (<button key={h.k} onClick={() => toggleHabit(h.k)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition" style={{ background: on ? "rgba(212,175,55,0.12)" : C.cardL, border: `1px solid ${on ? C.gold : "transparent"}` }}><h.icon size={16} style={{ color: on ? C.gold : C.muted }} /><span style={{ color: on ? C.white : C.muted }} className="flex-1 text-left">{h.t}</span>{on && <Check size={15} style={{ color: C.gold }} />}</button>); })}</div></Section>
+      <Section title="Treino" icon={Dumbbell}><div className="flex gap-2 mb-2"><input value={wName} onChange={e => setWName(e.target.value)} placeholder="Ex: Peito e tríceps" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><input value={wMin} onChange={e => setWMin(e.target.value.replace(/[^0-9]/g, ""))} placeholder="min" inputMode="numeric" className="w-16 rounded-xl px-3 py-2.5 text-sm outline-none text-center" style={{ background: C.cardL, color: C.white }} /><RoundBtn gold onClick={logWorkout}><Plus size={16} /></RoundBtn></div>{todayWorkouts.map(w => <div key={w.id} className="flex items-center justify-between text-sm py-1.5"><span>{w.name}</span><span style={{ color: C.muted }}>{w.min ? `${w.min} min` : "✓"}</span></div>)}</Section>
+      <Section title="Alimentação" icon={Utensils}><div className="flex gap-2 mb-2"><input value={meal} onChange={e => setMeal(e.target.value)} placeholder="O que você comeu?" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><RoundBtn gold onClick={logMeal}><Plus size={16} /></RoundBtn></div>{s.meals.filter(m => m.date === t).map(m => <div key={m.id} className="text-sm py-1.5">{m.desc}</div>)}</Section>
+      <Section title="Peso" icon={Scale}><div className="flex gap-2 items-center"><input value={weight} onChange={e => setWeight(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="kg" inputMode="decimal" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><RoundBtn gold onClick={logWeight}><Plus size={16} /></RoundBtn></div>{lastWeight && <p className="text-sm mt-2" style={{ color: C.muted }}>Último registro: <b style={{ color: C.white }}>{lastWeight.val} kg</b></p>}</Section>
+      <div className="h-2" />
+    </div>
+  );
+}
+function RoundBtn({ children, onClick, gold }) { return <button onClick={onClick} className="rounded-xl p-2.5 flex-shrink-0" style={{ background: gold ? C.gold : C.cardL, color: gold ? "#000" : C.white }}>{children}</button>; }
+
+/* ───────── CHALLENGE ───────── */
+function ChallengeCard({ s, update, compact }) {
+  const ch = s.challenge;
+  const def = CHALLENGES.find(c => c.k === ch.k);
+  const done = ch.done.length;
+  const pct = Math.round((done / def.days) * 100);
+  const todayDone = ch.done.includes(today());
+  const mark = () => { if (todayDone) return; update(p => ({ challenge: { ...p.challenge, done: [...p.challenge.done, today()] }, xp: p.xp + 40, xpByDate: { ...p.xpByDate, [today()]: (p.xpByDate[today()] || 0) + 40 } })); };
+  const quit = () => { if (confirm("Abandonar o desafio atual?")) update({ challenge: null }); };
+  return (
+    <Card style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(20,20,20,1))" }}>
+      <div className="flex items-center justify-between mb-2"><span className="font-bold flex items-center gap-2"><Rocket size={17} style={{ color: C.gold }} />Desafio {def.t}</span><span className="text-sm font-semibold" style={{ color: C.gold }}>{done}/{def.days}</span></div>
+      <div className="h-2 rounded-full overflow-hidden mb-3" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: C.gold }} /></div>
+      {!compact && <div className="flex flex-wrap gap-1.5 mb-3">{Array.from({ length: def.days }).map((_, i) => <div key={i} className="rounded" style={{ width: 14, height: 14, background: i < done ? C.gold : C.cardL }} />)}</div>}
+      <div className="flex gap-2"><button onClick={mark} disabled={todayDone} className="flex-1 rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-1.5" style={{ background: todayDone ? C.cardL : C.gold, color: todayDone ? C.muted : "#000" }}>{todayDone ? <><Check size={15} /> Dia concluído</> : <>Concluir hoje +40 XP</>}</button>{!compact && <button onClick={quit} className="rounded-xl px-3" style={{ background: C.cardL, color: C.muted }}><X size={16} /></button>}</div>
+    </Card>
+  );
+}
+
+/* ───────── PROFILE HUB ───────── */
+function ProfileTab({ s, update, award, fireToast }) {
+  const [view, setView] = useState("hub");
+  if (view === "achievements") return <Panel title="Conquistas" onBack={() => setView("hub")}><Achievements s={s} /></Panel>;
+  if (view === "levels") return <Panel title="Níveis & Recompensas" onBack={() => setView("hub")}><LevelsView s={s} /></Panel>;
+  if (view === "challenges") return <Panel title="Desafios" onBack={() => setView("hub")}><ChallengesView s={s} update={update} /></Panel>;
+  if (view === "library") return <Panel title="Biblioteca Premium" onBack={() => setView("hub")}><LibraryView s={s} fireToast={fireToast} /></Panel>;
+  if (view === "referral") return <Panel title="Indique e ganhe" onBack={() => setView("hub")}><ReferralView s={s} fireToast={fireToast} /></Panel>;
+
+  const li = levelInfo(s.xp);
+  const g = GOALS.find(x => x.k === s.profile.goal);
+  const items = [
+    { k: "achievements", t: "Conquistas", icon: Award, sub: `${s.achievements.length}/${ACHV.length}` },
+    { k: "levels", t: "Níveis & Recompensas", icon: Crown, sub: `Nível ${li.level}` },
+    { k: "challenges", t: "Desafios", icon: Rocket, sub: s.challenge ? "Em andamento" : "Começar" },
+    { k: "library", t: "Biblioteca Premium", icon: BookOpen, sub: "5 categorias" },
+    { k: "referral", t: "Indique e ganhe", icon: Gift, sub: "Recompensas" },
+  ];
+  const reset = () => { if (confirm("Isso vai apagar todo o seu progresso. Tem certeza?")) { window.storage.set("vivon-state", JSON.stringify(DEFAULT)).catch(() => {}); update(() => ({ ...DEFAULT })); } };
+
+  return (
+    <div className="px-5 pt-6 space-y-5">
+      <div className="flex flex-col items-center text-center pt-2">
+        <div className="rounded-full flex items-center justify-center mb-3" style={{ width: 76, height: 76, background: "rgba(212,175,55,0.12)", border: `2px solid ${C.gold}` }}><span className="text-2xl font-bold" style={{ color: C.gold }}>{(s.profile.name || "V")[0].toUpperCase()}</span></div>
+        <h1 className="text-xl font-bold">{s.profile.name || "Atleta VIVON"}</h1>
+        <p style={{ color: C.muted }} className="text-sm">{g ? `${g.e} ${g.t}` : "—"}</p>
+      </div>
+      <div className="grid grid-cols-3 gap-3"><Stat icon={Crown} v={li.level} l="Nível" /><Stat icon={Zap} v={s.xp} l="XP total" /><Stat icon={Flame} v={s.streak} l="Sequência" /></div>
+      <div className="space-y-2.5">{items.map(it => (<button key={it.k} onClick={() => setView(it.k)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="rounded-xl p-2" style={{ background: "rgba(212,175,55,0.12)" }}><it.icon size={18} style={{ color: C.gold }} /></div><span className="font-semibold flex-1 text-left">{it.t}</span><span className="text-xs" style={{ color: C.muted }}>{it.sub}</span><ChevronRight size={18} style={{ color: C.muted }} /></button>))}</div>
+      <button onClick={reset} className="w-full rounded-2xl py-3.5 text-sm font-semibold flex items-center justify-center gap-2" style={{ background: C.card, color: "#FF6B6B", border: "1px solid rgba(255,107,107,0.3)" }}><X size={16} />Reiniciar progresso</button>
+      <div className="h-4" />
+    </div>
+  );
+}
+function Panel({ title, onBack, children }) { return (<div className="px-5 pt-6"><div className="flex items-center gap-3 mb-5"><button onClick={onBack} className="rounded-xl p-2" style={{ background: C.card }}><ChevronLeft size={18} style={{ color: C.gold }} /></button><h1 className="text-xl font-bold">{title}</h1></div>{children}<div className="h-6" /></div>); }
+function Achievements({ s }) { return (<div className="grid grid-cols-2 gap-3">{ACHV.map(a => { const got = s.achievements.includes(a.id); return (<div key={a.id} className="rounded-2xl p-3.5 flex flex-col gap-1.5" style={{ background: a.rare ? "linear-gradient(135deg, rgba(212,175,55,0.14), rgba(20,20,20,1))" : C.card, border: `1px solid ${got ? C.gold : C.border}`, opacity: got ? 1 : 0.4 }}><div className="flex items-center justify-between"><a.icon size={20} style={{ color: got ? C.gold : C.muted }} />{a.rare && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.2)", color: C.gold }}>RARA</span>}</div><span className="font-semibold text-sm">{a.name}</span><span className="text-[11px]" style={{ color: C.muted }}>{a.desc}</span></div>); })}</div>); }
+function LevelsView({ s }) { const li = levelInfo(s.xp); return (<div className="space-y-3"><Card className="text-center"><p className="text-sm" style={{ color: C.muted }}>Seu nível</p><p className="text-4xl font-bold" style={{ color: C.gold }}>{li.level}<span className="text-lg" style={{ color: C.muted }}>/100</span></p><div className="h-2 rounded-full overflow-hidden mt-3" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${li.pct}%`, background: C.gold }} /></div><p className="text-xs mt-2" style={{ color: C.muted }}>{li.current}/{li.need} XP para o próximo</p></Card><div className="space-y-2">{LEVEL_REWARDS.map(r => { const got = li.level >= r.lvl; return (<div key={r.lvl} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${got ? C.gold : C.border}`, opacity: got ? 1 : 0.55 }}><div className="rounded-lg p-2" style={{ background: got ? "rgba(212,175,55,0.15)" : C.cardL }}>{got ? <r.icon size={18} style={{ color: C.gold }} /> : <Lock size={18} style={{ color: C.muted }} />}</div><div className="flex-1"><p className="font-semibold text-sm">{r.t}</p><p className="text-xs" style={{ color: C.muted }}>Nível {r.lvl}</p></div>{got && <Check size={16} style={{ color: C.gold }} />}</div>); })}</div></div>); }
+function ChallengesView({ s, update }) { const start = (k) => update({ challenge: { k, start: today(), done: [] } }); return (<div className="space-y-3">{s.challenge && <ChallengeCard s={s} update={update} />}{!s.challenge && CHALLENGES.map(c => (<button key={c.k} onClick={() => start(c.k)} className="w-full text-left rounded-2xl p-4" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="flex items-center justify-between mb-1"><span className="font-bold flex items-center gap-2"><Rocket size={17} style={{ color: C.gold }} />{c.t}</span><span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(212,175,55,0.15)", color: C.gold }}>{c.days} dias</span></div><p className="text-sm" style={{ color: C.muted }}>{c.desc}</p></button>))}{s.challenge && <p className="text-xs text-center" style={{ color: C.muted }}>Conclua o desafio atual para iniciar outro.</p>}</div>); }
+function LibraryView({ s, fireToast }) { const cats = Object.keys(LIBRARY); const [cat, setCat] = useState(cats[0]); const li = levelInfo(s.xp); return (<div><div className="flex gap-2 overflow-x-auto pb-3">{cats.map(c => <button key={c} onClick={() => setCat(c)} className="px-3.5 py-2 rounded-full whitespace-nowrap text-sm font-semibold" style={{ background: cat === c ? C.gold : C.card, color: cat === c ? "#000" : C.white, border: `1px solid ${cat === c ? C.gold : C.border}` }}>{c}</button>)}</div><div className="space-y-2.5">{LIBRARY[cat].map((it, i) => { const locked = li.level < it.lvl; return (<button key={i} onClick={() => fireToast(locked ? `🔒 Desbloqueia no nível ${it.lvl}` : "▶ Conteúdo em breve")} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: C.card, border: `1px solid ${C.border}`, opacity: locked ? 0.55 : 1 }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}>{locked ? <Lock size={16} style={{ color: C.muted }} /> : <BookOpen size={16} style={{ color: C.gold }} />}</div><div className="flex-1 text-left"><p className="font-semibold text-sm">{it.t}</p><p className="text-xs" style={{ color: C.muted }}>{locked ? `Nível ${it.lvl}` : it.d}</p></div>{!locked && <ChevronRight size={16} style={{ color: C.muted }} />}</button>); })}</div></div>); }
+function ReferralView({ s, fireToast }) { const code = "VIVON-" + (s.profile.name || "VOCE").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6); const copy = () => { try { navigator.clipboard.writeText(code); fireToast("Código copiado!"); } catch { fireToast(code); } }; const tiers = [{ n: 1, r: "7 dias grátis", icon: Star }, { n: 3, r: "1 mês grátis", icon: Medal }, { n: 5, r: "Tema exclusivo Ouro", icon: Crown }]; return (<div className="space-y-4"><Card className="text-center" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(20,20,20,1))" }}><Gift size={28} style={{ color: C.gold }} className="mx-auto mb-2" /><p className="text-sm" style={{ color: C.muted }}>Seu código de indicação</p><p className="text-2xl font-bold tracking-wider my-2" style={{ color: C.gold }}>{code}</p><button onClick={copy} className="rounded-xl px-5 py-2.5 text-sm font-bold inline-flex items-center gap-2" style={{ background: C.gold, color: "#000" }}><Copy size={15} />Copiar código</button></Card><p className="text-sm font-semibold">Cada amigo que assinar te dá:</p><div className="space-y-2.5">{tiers.map(t => (<div key={t.n} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}><t.icon size={18} style={{ color: C.gold }} /></div><div className="flex-1"><p className="font-semibold text-sm">{t.r}</p><p className="text-xs" style={{ color: C.muted }}>Com {t.n} {t.n === 1 ? "indicação" : "indicações"}</p></div></div>))}</div><p className="text-xs text-center" style={{ color: C.muted }}>Indicações ativas: 0 · conecte ao backend para rastrear automaticamente.</p></div>); }
+
+/* ───────── NAV ───────── */
+function Nav({ tab, setTab }) {
+  const items = [
+    { k: "home", icon: Home, l: "Início" },
+    { k: "track", icon: Zap, l: "Evoluir" },
+    { k: "treinos", icon: Dumbbell, l: "Treinos" },
+    { k: "dash", icon: BarChart3, l: "Painel" },
+    { k: "ai", icon: Brain, l: "IA" },
+    { k: "profile", icon: User, l: "Perfil" },
+  ];
+  return (
+    <div className="fixed bottom-0 left-1/2 w-full" style={{ maxWidth: 440, transform: "translateX(-50%)", background: "rgba(10,10,10,0.92)", backdropFilter: "blur(12px)", borderTop: `1px solid ${C.border}` }}>
+      <div className="flex items-center justify-around px-1 py-2.5">
+        {items.map(it => { const active = tab === it.k; return (<button key={it.k} onClick={() => setTab(it.k)} className="flex flex-col items-center gap-1 px-1 py-1"><it.icon size={20} style={{ color: active ? C.gold : C.muted }} /><span className="text-[9px] font-medium" style={{ color: active ? C.gold : C.muted }}>{it.l}</span></button>); })}
+      </div>
+    </div>
+  );
+}
