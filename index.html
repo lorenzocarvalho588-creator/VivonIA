@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>VIVON — Evolua todos os dias</title>
+  <meta name="theme-color" content="#0A0A0A" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="VIVON" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
@@ -26,6 +32,14 @@
 </head>
 <body>
   <div id="root"></div>
+
+  <script>
+    var __pwaPrompt = null;
+    window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); __pwaPrompt = e; window.dispatchEvent(new Event("pwa-available")); });
+    window.__pwaCanInstall = function () { return !!__pwaPrompt; };
+    window.__pwaInstall = function () { if (__pwaPrompt) { __pwaPrompt.prompt(); __pwaPrompt.userChoice.finally(function () { __pwaPrompt = null; window.dispatchEvent(new Event("pwa-installed")); }); } };
+    if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); }); }
+  </script>
 
   <script type="text/babel" data-type="module" data-presets="react">
 import { useState, useEffect, useRef } from "react";
@@ -87,25 +101,25 @@ const MODES = {
     name: "Coach Pessoal", short: "Coach", icon: Target,
     intro: "Sou seu Coach VIVON. Vamos definir e bater suas metas. Me conta o que você quer evoluir hoje.",
     chips: ["Defina minha meta da semana", "Como manter o foco?"],
-    sys: "Você é o Coach Pessoal do VIVON, plataforma premium de evolução pessoal. Acompanhe metas, motive com firmeza e proponha estratégias práticas e acionáveis. Tom premium, direto, motivador."
+    sys: "Você é o Coach Pessoal do VIVON, plataforma premium de evolução pessoal. Ajude a definir metas claras, criar planos de ação realistas e manter constância. Quando faltar informação, faça no máximo UMA pergunta por vez. Dê orientações específicas e acionáveis (nunca genéricas), quebre metas grandes em passos pequenos e mensuráveis e termine sempre com um próximo passo concreto ou uma pergunta. Tom profissional, direto e encorajador, sem clichês de autoajuda. Respostas curtas e fáceis de ler no celular. Português do Brasil. Não dê diagnóstico médico ou psicológico; diante de sinais de sofrimento sério, oriente procurar um profissional."
   },
   nutri: {
     name: "Nutricionista IA", short: "Nutri", icon: Salad,
     intro: "Sou o Nutricionista VIVON. Me diz o que você tem em casa ou seu objetivo que eu monto refeições com calorias e macros.",
     chips: ["Tenho arroz, frango e ovos", "Monte meu cardápio do dia"],
-    sys: "Você é o Nutricionista IA do VIVON. Crie cardápios e refeições brasileiras realistas. SEMPRE estime calorias, proteínas, carboidratos e gorduras. Tom prático e premium. Não dê diagnóstico médico."
+    sys: "Você é o Nutricionista IA do VIVON. Monte cardápios e refeições brasileiras realistas e acessíveis, adaptados ao objetivo, à rotina e ao que o usuário tem disponível. SEMPRE estime calorias e macros (proteínas, carboidratos, gorduras) por refeição e o total do dia ao montar um plano. Pergunte só o essencial que faltar, uma pergunta por vez. Sugira substituições simples e priorize alimentos comuns no Brasil. Formato escaneável: refeições com horário sugerido e os macros ao lado. Tom profissional e prático. Português do Brasil. Você não é médico: não faça diagnóstico nem prescreva para condições clínicas — nesses casos, recomende um nutricionista ou médico."
   },
   trainer: {
     name: "Personal Trainer IA", short: "Treino", icon: Dumbbell,
     intro: "Sou seu Personal Trainer VIVON. Me diz se é em casa ou academia, equipamentos e tempo disponível que eu monto seu treino.",
     chips: ["Treino em casa, 30 min, sem equipamento", "Treino de academia para hipertrofia"],
-    sys: "Você é o Personal Trainer IA do VIVON. Monte treinos com exercícios, séries e repetições adaptados ao local (casa/academia), equipamentos e tempo. Ajuste à progressão e nível. Tom motivador e premium."
+    sys: "Você é o Personal Trainer IA do VIVON. Monte treinos seguros e eficazes com exercícios, séries, repetições e descanso, adaptados ao local (casa ou academia), equipamentos, tempo e nível. Se faltar informação (local, equipamentos, tempo, nível, foco), pergunte o essencial — uma pergunta por vez — antes de montar. Estruture em aquecimento, parte principal (séries x reps e descanso) e finalização, explicando a execução em uma linha quando útil. Respeite a progressão e evite sobrecarga para iniciantes. Tom profissional e motivador. Português do Brasil. Oriente parar e procurar ajuda médica em caso de dor aguda ou lesão."
   },
   planner: {
     name: "Planejador IA", short: "Plano", icon: Calendar,
     intro: "Sou o Planejador VIVON. Organizo sua rotina, hábitos, horários e metas. Por onde começamos?",
     chips: ["Organize minha rotina diária", "Crie meu plano de hábitos"],
-    sys: "Você é o Planejador IA do VIVON. Organize rotinas, hábitos, horários e metas em estruturas claras e realistas, com blocos de tempo. Tom premium e organizado."
+    sys: "Você é o Planejador IA do VIVON. Transforme os objetivos e a rotina do usuário em um plano organizado e realista, com blocos de horário, hábitos e metas. Pergunte o essencial que faltar (horários livres, prioridades, tempo disponível), uma pergunta por vez. Entregue uma estrutura clara por períodos do dia ou dias da semana, com ações concretas — nada vago — equilibrando treino, alimentação, descanso e foco. Termine com o primeiro passo a executar hoje. Tom profissional e organizado, escaneável no celular. Português do Brasil."
   },
 };
 
@@ -153,9 +167,44 @@ const ACHV = [
 ];
 
 function today() { return new Date().toISOString().slice(0, 10); }
+let __audioCtx = null;
+function playDing(levelUp) {
+  try {
+    __audioCtx = __audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = __audioCtx; const t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination); o.type = "sine";
+    o.frequency.value = levelUp ? 880 : 620;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    o.start(t); o.stop(t + 0.24);
+    if (levelUp) {
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.connect(g2); g2.connect(ctx.destination); o2.type = "sine"; o2.frequency.value = 1245;
+      g2.gain.setValueAtTime(0.0001, t + 0.12);
+      g2.gain.exponentialRampToValueAtTime(0.12, t + 0.13);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+      o2.start(t + 0.12); o2.stop(t + 0.42);
+    }
+  } catch (e) {}
+}
 function yesterday() { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); }
 function lastN(n) { const a = []; for (let i = n - 1; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); a.push(d.toISOString().slice(0, 10)); } return a; }
 function dayLabel(iso) { return ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][new Date(iso + "T12:00").getDay()]; }
+function weekKey() { const d = new Date(); const off = (d.getDay() + 6) % 7; d.setDate(d.getDate() - off); return d.toISOString().slice(0, 10); }
+function weekDays() { const d = new Date(); const off = (d.getDay() + 6) % 7; const mon = new Date(d); mon.setDate(d.getDate() - off); const arr = []; for (let i = 0; i < 7; i++) { const x = new Date(mon); x.setDate(mon.getDate() + i); arr.push(x.toISOString().slice(0, 10)); } return arr; }
+function buildWeeklyGoals(s) {
+  const days = weekDays();
+  const workoutsWeek = (s.workouts || []).filter(w => days.includes(w.date)).length;
+  const activeDays = days.filter(d => (s.xpByDate[d] || 0) > 0).length;
+  const xpWeek = days.reduce((a, d) => a + (s.xpByDate[d] || 0), 0);
+  return [
+    { id: "wk_train", t: "Treine 4 vezes", icon: Dumbbell, cur: workoutsWeek, tgt: 4, xp: 80 },
+    { id: "wk_active", t: "Fique ativo 5 dias", icon: Flame, cur: activeDays, tgt: 5, xp: 60 },
+    { id: "wk_xp", t: "Ganhe 300 XP na semana", icon: Zap, cur: xpWeek, tgt: 300, xp: 50 },
+  ];
+}
 
 function levelInfo(xp) {
   let level = 1, acc = 0, need = 200;
@@ -359,8 +408,8 @@ const TREINOS = {
 
 const DEFAULT = {
   screen: "onboarding", obStep: 0,
-  profile: { name: "", goal: "", level: "", age: "", weight: "", height: "" },
-  xp: 0, streak: 0, lastActive: "", xpByDate: {}, achievements: [],
+  profile: { name: "", goal: "manter", level: "iniciante", age: "", weight: "", height: "" },
+  xp: 0, streak: 0, lastActive: "", xpByDate: {}, achievements: [], photos: [],
   tab: "home",
   water: { date: "", count: 0 },
   sleep: { date: "", hours: 0 },
@@ -371,6 +420,8 @@ const DEFAULT = {
   missionsClaimed: { date: "", ids: [] },
   challenge: null,
   analysis: null,
+  notif: { on: false, last: "" },
+  weeklyGoals: { week: "", ids: [] },
 };
 
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
@@ -422,6 +473,37 @@ function VivonApp() {
     }
   }, [s]);
 
+  useEffect(() => {
+    if (!s || s.screen !== "app" || !s.notif || !s.notif.on) return;
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    const t = today();
+    if (s.notif.last === t) return;
+    const atRisk = s.lastActive !== t && s.streak > 0;
+    if (atRisk && new Date().getHours() >= 17) {
+      try {
+        new Notification("🔥 Não perca sua sequência!", { body: `Você está há ${s.streak} dias seguidos. Registre algo hoje pra manter o ritmo.`, icon: "/icon-192.png" });
+        setS(p => ({ ...p, notif: { ...(p.notif || {}), last: t } }));
+      } catch (e) {}
+    }
+  }, [s]);
+
+  useEffect(() => {
+    if (!s || s.screen !== "app") return;
+    const wk = weekKey();
+    const claimed = s.weeklyGoals?.week === wk ? s.weeklyGoals.ids : [];
+    const newly = buildWeeklyGoals(s).filter(g => g.cur >= g.tgt && !claimed.includes(g.id));
+    if (newly.length) {
+      setS(p => {
+        const w2 = weekKey();
+        const cl = p.weeklyGoals?.week === w2 ? p.weeklyGoals.ids : [];
+        const t = today();
+        const bonus = newly.reduce((a, g) => a + g.xp, 0);
+        return { ...p, xp: p.xp + bonus, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + bonus }, weeklyGoals: { week: w2, ids: [...cl, ...newly.map(g => g.id)] } };
+      });
+      fireToast("🎯 Meta da semana batida · +" + newly.reduce((a, g) => a + g.xp, 0) + " XP");
+    }
+  }, [s]);
+
   function fireToast(msg) {
     setToast(msg);
     clearTimeout(toastTimer.current);
@@ -430,12 +512,20 @@ function VivonApp() {
 
   if (!s) return <Splash />;
 
-  const award = (amount) => setS(p => {
-    const t = today(), y = yesterday();
-    let streak = p.streak, last = p.lastActive;
-    if (last !== t) { streak = last === y ? streak + 1 : 1; last = t; }
-    return { ...p, xp: p.xp + amount, lastActive: last, streak, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + amount } };
-  });
+  const award = (amount) => {
+    const before = s ? levelInfo(s.xp).level : 0;
+    const after = s ? levelInfo(s.xp + amount).level : 0;
+    const lvlUp = after > before;
+    try { if (navigator.vibrate) navigator.vibrate(lvlUp ? [0, 35, 30, 35] : 18); } catch (e) {}
+    playDing(lvlUp);
+    if (lvlUp) fireToast(`⬆️ Nível ${after}! Você evoluiu.`);
+    setS(p => {
+      const t = today(), y = yesterday();
+      let streak = p.streak, last = p.lastActive;
+      if (last !== t) { streak = last === y ? streak + 1 : 1; last = t; }
+      return { ...p, xp: p.xp + amount, lastActive: last, streak, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + amount } };
+    });
+  };
   const update = (patch) => setS(p => ({ ...p, ...(typeof patch === "function" ? patch(p) : patch) }));
 
   if (s.screen === "onboarding") return <Onboarding s={s} update={update} award={award} />;
@@ -450,7 +540,7 @@ function VivonApp() {
         <div className="flex-1 overflow-y-auto pb-24">
           {s.tab === "home" && <HomeTab s={s} update={update} />}
           {s.tab === "track" && <TrackTab s={s} update={update} award={award} />}
-          {s.tab === "treinos" && <TreinosTab />}
+          {s.tab === "treinos" && <TreinosTab update={update} award={award} fireToast={fireToast} />}
           {s.tab === "dash" && <DashboardTab s={s} setS={setS} />}
           {s.tab === "ai" && <AITab s={s} setS={setS} award={award} />}
           {s.tab === "profile" && <ProfileTab s={s} update={update} award={award} fireToast={fireToast} />}
@@ -490,7 +580,7 @@ function Onboarding({ s, update, award }) {
   const next = () => update({ obStep: step + 1, profile: p });
   const finish = () => { update({ screen: "app", profile: p, obStep: 0 }); award(100); };
 
-  if (step === 0) return (
+  return (
     <Wrap>
       <div className="flex-1 flex flex-col items-center justify-center text-center" style={{ gap: 30 }}>
         <div style={{ position: "relative", animation: "vFade .9s ease both" }}>
@@ -507,49 +597,12 @@ function Onboarding({ s, update, award }) {
         </div>
       </div>
       <div style={{ animation: "vFade 1s ease both", animationDelay: ".34s" }}>
-        <Btn onClick={next}>Começar minha evolução <ArrowRight size={18} /></Btn>
-        <p className="text-center text-xs mt-4" style={{ color: C.muted }}>Leva menos de 1 minuto.</p>
+        <Btn onClick={finish}>Começar minha evolução <ArrowRight size={18} /></Btn>
+        <p className="text-center text-xs mt-4" style={{ color: C.muted }}>Sua evolução começa agora.</p>
       </div>
     </Wrap>
   );
-  if (step === 1) return (
-    <Wrap>
-      <Header t="Como devemos te chamar?" sub="Vamos personalizar sua jornada." />
-      <input autoFocus value={p.name} onChange={e => set("name", e.target.value)} placeholder="Seu nome" className="w-full rounded-2xl px-5 py-4 text-lg outline-none" style={{ background: C.card, color: C.white, border: `1px solid ${C.border}` }} />
-      <div className="flex-1" /><Btn disabled={!p.name.trim()} onClick={next}>Continuar <ArrowRight size={18} /></Btn>
-    </Wrap>
-  );
-  if (step === 2) return (
-    <Wrap>
-      <Header t="Qual seu objetivo principal?" sub="Isso guia tudo no VIVON." />
-      <div className="grid grid-cols-1 gap-3">{GOALS.map(g => <Choice key={g.k} active={p.goal === g.k} onClick={() => set("goal", g.k)}><span className="text-2xl">{g.e}</span><span className="font-semibold">{g.t}</span></Choice>)}</div>
-      <div className="flex-1" /><Btn disabled={!p.goal} onClick={next}>Continuar <ArrowRight size={18} /></Btn>
-    </Wrap>
-  );
-  if (step === 3) return (
-    <Wrap>
-      <Header t="Qual seu nível atual?" sub="Para calibrar treinos e desafios." />
-      <div className="grid grid-cols-1 gap-3">{LEVELS.map(l => <Choice key={l.k} active={p.level === l.k} onClick={() => set("level", l.k)}><span className="font-semibold">{l.t}</span></Choice>)}</div>
-      <div className="flex-1" /><Btn disabled={!p.level} onClick={next}>Continuar <ArrowRight size={18} /></Btn>
-    </Wrap>
-  );
-  return (
-    <Wrap>
-      <Header t="Seus dados" sub="Opcional, mas deixa a IA mais precisa." />
-      <div className="flex flex-col gap-3">
-        {[["age", "Idade", "anos"], ["weight", "Peso", "kg"], ["height", "Altura", "cm"]].map(([k, lbl, u]) => (
-          <div key={k} className="flex items-center rounded-2xl px-5 py-4" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-            <span style={{ color: C.muted }}>{lbl}</span>
-            <input type="text" value={p[k]} inputMode={k === "weight" ? "decimal" : "numeric"}
-              onChange={e => { let v = e.target.value.replace(/[^0-9.]/g, ""); if (k !== "weight") v = v.replace(/\./g, ""); const parts = v.split("."); if (parts.length > 2) v = parts[0] + "." + parts.slice(1).join(""); set(k, v); }}
-              className="flex-1 ml-4 bg-transparent text-right text-xl font-semibold outline-none" style={{ color: C.white, minWidth: 0 }} placeholder="—" />
-            <span className="ml-3 text-sm" style={{ color: C.muted, minWidth: 30 }}>{u}</span>
-          </div>
-        ))}
-      </div>
-      <div className="flex-1" /><Btn onClick={finish}>Entrar no VIVON <Sparkles size={18} /></Btn>
-    </Wrap>
-  );
+
 }
 function Header({ t, sub }) { return <div className="mb-7" style={{ animation: "vFade .6s ease both" }}><div className="mb-6"><Logo size={26} /></div><h1 className="text-2xl font-bold mb-1.5" style={{ letterSpacing: "-0.01em" }}>{t}</h1><p style={{ color: C.muted }}>{sub}</p></div>; }
 function Choice({ active, onClick, children }) { return <button onClick={onClick} className="flex items-center gap-3 rounded-2xl px-5 py-4 text-left transition" style={{ background: active ? "rgba(212,175,55,0.12)" : C.card, border: `1.5px solid ${active ? C.gold : C.border}`, color: C.white }}>{children}{active && <Check size={18} className="ml-auto" style={{ color: C.gold }} />}</button>; }
@@ -648,9 +701,80 @@ function HomeTab({ s, update }) {
   );
 }
 
-function TreinosTab() {
+function GuidedWorkout({ group, onClose, onFinish }) {
+  const exs = group.exercises;
+  const [idx, setIdx] = useState(0);
+  const [phase, setPhase] = useState("exercise");
+  const [rest, setRest] = useState(60);
+
+  const next = () => { setIdx(i => i + 1); setRest(60); setPhase("exercise"); };
+
+  useEffect(() => {
+    if (phase !== "rest") return;
+    if (rest <= 0) { next(); return; }
+    const id = setTimeout(() => setRest(r => r - 1), 1000);
+    return () => clearTimeout(id);
+  }, [phase, rest]);
+
+  const startRest = () => { if (idx >= exs.length - 1) { setPhase("done"); } else { setRest(60); setPhase("rest"); } };
+  const finish = () => { onFinish(group.group); onClose(); };
+  const ex = exs[idx];
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 60, background: C.bg, display: "flex", flexDirection: "column" }}>
+      <div className="flex items-center justify-between px-5 pt-5">
+        <span className="text-sm font-semibold" style={{ color: C.muted }}>{group.group} · {Math.min(idx + 1, exs.length)}/{exs.length}</span>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={24} style={{ color: C.muted }} /></button>
+      </div>
+      <div className="h-1 mx-5 mt-3 rounded-full overflow-hidden" style={{ background: C.cardL }}>
+        <div className="h-full rounded-full" style={{ width: `${(idx / exs.length) * 100}%`, background: C.gold, transition: "width .3s" }} />
+      </div>
+
+      {phase === "exercise" ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <p className="text-xs font-bold mb-3" style={{ color: C.gold, letterSpacing: ".15em" }}>EXERCÍCIO {idx + 1}</p>
+          <h2 className="text-3xl font-bold mb-3">{ex.name}</h2>
+          <p className="text-xl" style={{ color: C.gold }}>{ex.sets}</p>
+        </div>
+      ) : phase === "rest" ? (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <p className="text-xs font-bold mb-4" style={{ color: C.muted, letterSpacing: ".15em" }}>DESCANSO</p>
+          <div className="font-bold mb-3" style={{ color: C.gold, fontSize: 76, lineHeight: 1 }}>{rest}s</div>
+          <p className="text-sm mb-1" style={{ color: C.muted }}>Próximo</p>
+          <p className="text-lg font-semibold">{exs[idx + 1]?.name}</p>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <Trophy size={56} style={{ color: C.gold }} />
+          <h2 className="text-2xl font-bold mt-4 mb-2">Treino concluído!</h2>
+          <p className="text-sm" style={{ color: C.muted }}>Você completou {exs.length} exercícios de {group.group}. +30 XP</p>
+        </div>
+      )}
+
+      <div className="px-5 pb-8 space-y-3">
+        {phase === "exercise" ? (
+          <Btn onClick={startRest}>{idx >= exs.length - 1 ? "Finalizar treino" : "Concluí · descansar"} <Check size={18} /></Btn>
+        ) : phase === "rest" ? (
+          <div className="space-y-3">
+            <Btn onClick={next}>Pular descanso <ChevronRight size={18} /></Btn>
+            <button onClick={() => setRest(r => r + 15)} className="w-full rounded-2xl py-3 font-semibold" style={{ background: C.card, color: C.gold, border: `1px solid ${C.border}`, cursor: "pointer" }}>+15s</button>
+          </div>
+        ) : (
+          <Btn onClick={finish}>Concluir <Check size={18} /></Btn>
+        )}
+      </div>
+    </div>
+  );
+}
+function TreinosTab({ update, award, fireToast }) {
   const [gender, setGender] = useState("masculino");
   const [open, setOpen] = useState(null);
+  const [guided, setGuided] = useState(null);
+  const finishWorkout = (groupName) => {
+    update(p => ({ workouts: [{ id: Date.now(), date: today(), name: groupName }, ...p.workouts] }));
+    award(30);
+    if (fireToast) fireToast("💪 Treino registrado · +30 XP");
+  };
   const groups = TREINOS[gender];
   const totalEx = groups.reduce((a, g) => a + g.exercises.length, 0);
   return (
@@ -671,13 +795,14 @@ function TreinosTab() {
                 <span className="font-semibold flex items-center gap-2"><Dumbbell size={16} style={{ color: C.gold }} />{grp.group}</span>
                 <span className="flex items-center gap-2 text-xs" style={{ color: C.muted }}>{filled}/{grp.exercises.length} vídeos<ChevronRight size={16} style={{ color: C.muted, transform: open === grp.group ? "rotate(90deg)" : "none", transition: "transform .2s" }} /></span>
               </button>
-              {open === grp.group && <div className="px-4 pb-4 space-y-3">{grp.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} gender={gender} />)}</div>}
+              {open === grp.group && <div className="px-4 pb-4 space-y-3"><button onClick={() => setGuided(grp)} className="w-full rounded-xl py-3 font-bold flex items-center justify-center gap-2" style={{ background: `linear-gradient(180deg, #EBCB6E, ${C.gold})`, color: "#000", cursor: "pointer" }}><Rocket size={16} /> Iniciar treino guiado</button>{grp.exercises.map((ex, i) => <ExerciseRow key={i} ex={ex} gender={gender} />)}</div>}
             </div>
           );
         })}
       </div>
       <p className="text-xs text-center mt-5 leading-relaxed" style={{ color: C.muted }}>{groups.length} grupos · {totalEx} exercícios neste sexo. Cada um tem um espaço reservado — seus vídeos entram aqui automaticamente.</p>
       <div className="h-2" />
+      {guided && <GuidedWorkout group={guided} onClose={() => setGuided(null)} onFinish={finishWorkout} />}
     </div>
   );
 }
@@ -715,7 +840,7 @@ function DashboardTab({ s, setS }) {
     try {
       const res = await fetch(AI_ENDPOINT, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ max_tokens: 1000, system: "Você é o Analista VIVON. Gere um relatório de evolução curto e premium em português do Brasil, com exatamente 4 seções tituladas: Pontos fortes, Pontos fracos, Sugestões e Próximos passos. Seja específico e use os dados fornecidos. Tom motivador e direto.", messages: [{ role: "user", content: data }] }),
+        body: JSON.stringify({ max_tokens: 1000, system: "Você é o Analista de Evolução do VIVON. Gere um relatório curto e profissional em português do Brasil com exatamente 4 seções, nesta ordem e com estes títulos: Pontos fortes, Pontos fracos, Sugestões e Próximos passos. Baseie cada ponto nos DADOS fornecidos, citando números reais (score, sequência, consistência, variação de peso) — nada genérico. Em Sugestões e Próximos passos, dê ações concretas e específicas para o objetivo do usuário. Tom profissional, direto e motivador, sem exagero. Cada seção com 1 a 3 frases.", messages: [{ role: "user", content: data }] }),
       });
       const d = await res.json();
       const txt = (d.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim() || "Não consegui gerar agora.";
@@ -856,15 +981,38 @@ function ChallengeCard({ s, update, compact }) {
 
 function ProfileTab({ s, update, award, fireToast }) {
   const [view, setView] = useState("hub");
+  const [canInstall, setCanInstall] = useState(typeof window !== "undefined" && window.__pwaCanInstall ? window.__pwaCanInstall() : false);
+  useEffect(() => {
+    const on = () => setCanInstall(true), off = () => setCanInstall(false);
+    window.addEventListener("pwa-available", on);
+    window.addEventListener("pwa-installed", off);
+    return () => { window.removeEventListener("pwa-available", on); window.removeEventListener("pwa-installed", off); };
+  }, []);
   if (view === "achievements") return <Panel title="Conquistas" onBack={() => setView("hub")}><Achievements s={s} /></Panel>;
   if (view === "levels") return <Panel title="Níveis & Recompensas" onBack={() => setView("hub")}><LevelsView s={s} /></Panel>;
   if (view === "challenges") return <Panel title="Desafios" onBack={() => setView("hub")}><ChallengesView s={s} update={update} /></Panel>;
   if (view === "library") return <Panel title="Biblioteca Premium" onBack={() => setView("hub")}><LibraryView s={s} fireToast={fireToast} /></Panel>;
   if (view === "referral") return <Panel title="Indique e ganhe" onBack={() => setView("hub")}><ReferralView s={s} fireToast={fireToast} /></Panel>;
+  if (view === "edit") return <Panel title="Editar perfil" onBack={() => setView("hub")}><EditProfile s={s} update={update} fireToast={fireToast} onDone={() => setView("hub")} /></Panel>;
+  if (view === "backup") return <Panel title="Backup dos meus dados" onBack={() => setView("hub")}><BackupView s={s} update={update} fireToast={fireToast} /></Panel>;
+  if (view === "photos") return <Panel title="Fotos de progresso" onBack={() => setView("hub")}><PhotosView s={s} update={update} fireToast={fireToast} /></Panel>;
+  if (view === "share") return <Panel title="Compartilhar evolução" onBack={() => setView("hub")}><ShareCardView s={s} fireToast={fireToast} /></Panel>;
+  if (view === "reminders") return <Panel title="Lembretes" onBack={() => setView("hub")}><RemindersView s={s} update={update} fireToast={fireToast} /></Panel>;
+  if (view === "week") return <Panel title="Resumo da semana" onBack={() => setView("hub")}><WeeklySummaryView s={s} /></Panel>;
+  if (view === "weight") return <Panel title="Histórico de peso" onBack={() => setView("hub")}><WeightChartView s={s} /></Panel>;
+  if (view === "goals") return <Panel title="Metas da semana" onBack={() => setView("hub")}><WeeklyGoalsView s={s} /></Panel>;
 
   const li = levelInfo(s.xp);
   const g = GOALS.find(x => x.k === s.profile.goal);
   const items = [
+    { k: "edit", t: "Editar perfil", icon: User, sub: "Nome, objetivo e dados" },
+    { k: "backup", t: "Backup dos meus dados", icon: Copy, sub: "Exportar e importar" },
+    { k: "photos", t: "Fotos de progresso", icon: Activity, sub: "Seu antes e depois" },
+    { k: "share", t: "Compartilhar evolução", icon: Sparkles, sub: "Imagem pro Instagram" },
+    { k: "reminders", t: "Lembretes", icon: Bell, sub: "Avisos de sequência" },
+    { k: "week", t: "Resumo da semana", icon: BarChart3, sub: "Seus últimos 7 dias" },
+    { k: "weight", t: "Histórico de peso", icon: Scale, sub: "Gráfico de evolução" },
+    { k: "goals", t: "Metas da semana", icon: Target, sub: "Renovam toda segunda" },
     { k: "achievements", t: "Conquistas", icon: Award, sub: `${s.achievements.length}/${ACHV.length}` },
     { k: "levels", t: "Níveis & Recompensas", icon: Crown, sub: `Nível ${li.level}` },
     { k: "challenges", t: "Desafios", icon: Rocket, sub: s.challenge ? "Em andamento" : "Começar" },
@@ -881,9 +1029,397 @@ function ProfileTab({ s, update, award, fireToast }) {
         <p style={{ color: C.muted }} className="text-sm">{g ? `${g.e} ${g.t}` : "—"}</p>
       </div>
       <div className="grid grid-cols-3 gap-3"><Stat icon={Crown} v={li.level} l="Nível" /><Stat icon={Zap} v={s.xp} l="XP total" /><Stat icon={Flame} v={s.streak} l="Sequência" /></div>
+      {canInstall ? (
+        <button onClick={() => window.__pwaInstall && window.__pwaInstall()} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: `linear-gradient(180deg, #EBCB6E, ${C.gold})`, color: "#000", border: "none", cursor: "pointer" }}>
+          <Rocket size={18} /><span className="font-bold flex-1 text-left">Instalar o app no celular</span><ChevronRight size={18} />
+        </button>
+      ) : null}
       <div className="space-y-2.5">{items.map(it => (<button key={it.k} onClick={() => setView(it.k)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="rounded-xl p-2" style={{ background: "rgba(212,175,55,0.12)" }}><it.icon size={18} style={{ color: C.gold }} /></div><span className="font-semibold flex-1 text-left">{it.t}</span><span className="text-xs" style={{ color: C.muted }}>{it.sub}</span><ChevronRight size={18} style={{ color: C.muted }} /></button>))}</div>
       <button onClick={reset} className="w-full rounded-2xl py-3.5 text-sm font-semibold flex items-center justify-center gap-2" style={{ background: C.card, color: "#FF6B6B", border: "1px solid rgba(255,107,107,0.3)" }}><X size={16} />Reiniciar progresso</button>
       <div className="h-4" />
+    </div>
+  );
+}
+function WeeklyGoalsView({ s }) {
+  const goals = buildWeeklyGoals(s);
+  const wk = weekKey();
+  const claimed = s.weeklyGoals?.week === wk ? s.weeklyGoals.ids : [];
+  return (
+    <div className="space-y-4">
+      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>Suas metas desta semana. Bater cada uma dá XP. Elas renovam toda segunda-feira.</p>
+      {goals.map(g => {
+        const done = g.cur >= g.tgt || claimed.includes(g.id);
+        const pct = Math.min(100, Math.round((g.cur / g.tgt) * 100));
+        return (
+          <div key={g.id} className="rounded-2xl px-4 py-4" style={{ background: C.card, border: `1px solid ${done ? C.gold : C.border}` }}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2"><g.icon size={18} style={{ color: C.gold }} /><span className="font-semibold">{g.t}</span></div>
+              {done ? <Check size={18} style={{ color: C.gold }} /> : <span className="text-xs font-bold" style={{ color: C.gold }}>+{g.xp} XP</span>}
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: C.gold }} /></div>
+            <p className="text-xs mt-1.5" style={{ color: C.muted }}>{Math.min(g.cur, g.tgt)}/{g.tgt}{done ? " · concluída" : ""}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+function WeeklySummaryView({ s }) {
+  const days = lastN(7);
+  const xpWeek = days.reduce((a, d) => a + (s.xpByDate[d] || 0), 0);
+  const activeDays = days.filter(d => (s.xpByDate[d] || 0) > 0).length;
+  const workoutsWeek = (s.workouts || []).filter(w => days.includes(w.date)).length;
+  const Item = ({ icon: Ic, v, l }) => (
+    <div className="rounded-2xl px-4 py-4 flex flex-col items-center" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+      <Ic size={20} style={{ color: C.gold }} />
+      <p className="text-2xl font-bold mt-1">{v}</p>
+      <p className="text-xs" style={{ color: C.muted }}>{l}</p>
+    </div>
+  );
+  return (
+    <div className="space-y-5">
+      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>O que você fez nos últimos 7 dias. Feche a semana com orgulho e comece a próxima com tudo.</p>
+      <div className="grid grid-cols-2 gap-3">
+        <Item icon={Zap} v={xpWeek} l="XP na semana" />
+        <Item icon={Flame} v={s.streak} l="Sequência" />
+        <Item icon={Check} v={`${activeDays}/7`} l="Dias ativos" />
+        <Item icon={Dumbbell} v={workoutsWeek} l="Treinos" />
+      </div>
+      <div className="rounded-2xl px-4 py-4" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+        <p className="text-xs font-bold mb-3" style={{ color: C.muted, letterSpacing: ".1em" }}>XP POR DIA</p>
+        <MiniBars dates={days} data={s.xpByDate} />
+        <div className="flex justify-between mt-1">{days.map(d => <span key={d} className="text-[10px] flex-1 text-center" style={{ color: d === today() ? C.gold : C.muted }}>{dayLabel(d)}</span>)}</div>
+      </div>
+      <p className="text-sm font-semibold text-center" style={{ color: C.gold }}>
+        {activeDays >= 6 ? "Semana impecável. Você é constância pura." : activeDays >= 4 ? "Boa semana! Dá pra subir mais ainda." : activeDays >= 1 ? "Você começou. Próxima semana, mais um passo." : "Bora ativar essa semana?"}
+      </p>
+    </div>
+  );
+}
+function WeightChartView({ s }) {
+  const ws = (s.weights || []).slice().reverse();
+  if (ws.length < 2) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm leading-relaxed" style={{ color: C.muted }}>Registre seu peso pelo menos 2 vezes (na aba Evoluir) pra ver aqui o gráfico da sua evolução.</p>
+        {ws.length === 1 ? <p className="text-sm" style={{ color: C.white }}>Peso atual: <b style={{ color: C.gold }}>{ws[0].val} kg</b></p> : null}
+      </div>
+    );
+  }
+  const vals = ws.map(w => w.val);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const pad = (max - min) * 0.15 || 1;
+  const lo = min - pad, hi = max + pad;
+  const W = 320, H = 160, padX = 12, padY = 16;
+  const x = i => padX + (i / (ws.length - 1)) * (W - padX * 2);
+  const y = v => padY + (1 - (v - lo) / (hi - lo)) * (H - padY * 2);
+  const pts = ws.map((w, i) => `${x(i)},${y(w.val)}`).join(" ");
+  const first = ws[0].val, last = ws[ws.length - 1].val, delta = +(last - first).toFixed(1);
+  return (
+    <div className="space-y-5">
+      <div className="flex items-end justify-between">
+        <div><p className="text-xs" style={{ color: C.muted }}>Atual</p><p className="text-3xl font-bold" style={{ color: C.gold }}>{last}<span className="text-base" style={{ color: C.muted }}> kg</span></p></div>
+        <div className="text-right"><p className="text-xs" style={{ color: C.muted }}>Variação total</p><p className="text-lg font-bold" style={{ color: delta === 0 ? C.muted : (delta < 0 ? "#5BD6A0" : "#E0A93B") }}>{delta > 0 ? "+" : ""}{delta} kg</p></div>
+      </div>
+      <div className="rounded-2xl p-3" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block" }}>
+          <polyline fill="none" stroke={C.gold} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={pts} />
+          {ws.map((w, i) => <circle key={i} cx={x(i)} cy={y(w.val)} r="3" fill={C.gold} />)}
+        </svg>
+        <div className="flex justify-between mt-1"><span className="text-[10px]" style={{ color: C.muted }}>{ws[0].date}</span><span className="text-[10px]" style={{ color: C.muted }}>{ws[ws.length - 1].date}</span></div>
+      </div>
+      <p className="text-xs" style={{ color: C.muted }}>Peso inicial registrado: {first} kg · {ws.length} registros no total.</p>
+    </div>
+  );
+}
+function RemindersView({ s, update, fireToast }) {
+  const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+  const on = !!(s.notif && s.notif.on);
+
+  const ativar = async () => {
+    if (typeof Notification === "undefined") { if (fireToast) fireToast("Seu navegador não suporta notificações."); return; }
+    let p = Notification.permission;
+    if (p === "default") { p = await Notification.requestPermission(); setPerm(p); }
+    if (p === "granted") {
+      update(prev => ({ ...prev, notif: { ...(prev.notif || {}), on: true } }));
+      if (fireToast) fireToast("Lembretes ativados!");
+      try { new Notification("VIVON", { body: "Pronto! Vou te lembrar de manter sua sequência.", icon: "/icon-192.png" }); } catch (e) {}
+    } else if (p === "denied") {
+      setPerm("denied");
+      if (fireToast) fireToast("Permissão negada. Libere nas configurações do site.");
+    }
+  };
+
+  const desativar = () => { update(prev => ({ ...prev, notif: { ...(prev.notif || {}), on: false } })); if (fireToast) fireToast("Lembretes desativados."); };
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
+        Receba um lembrete pra não perder sua sequência quando ainda não registrou nada no dia. Funciona melhor com o app instalado na tela inicial.
+      </p>
+      <div className="rounded-2xl px-4 py-4 flex items-center justify-between" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+        <div className="flex items-center gap-3"><Bell size={20} style={{ color: C.gold }} /><span className="font-semibold">Lembrete de sequência</span></div>
+        <span className="text-sm font-bold" style={{ color: on ? C.gold : C.muted }}>{on ? "Ativado" : "Desativado"}</span>
+      </div>
+      {on ? (
+        <button onClick={desativar} className="w-full rounded-2xl py-4 font-bold" style={{ background: C.card, color: C.muted, border: `1px solid ${C.border}`, cursor: "pointer" }}>Desativar lembretes</button>
+      ) : (
+        <Btn onClick={ativar}>Ativar lembretes <Bell size={18} /></Btn>
+      )}
+      {perm === "denied" ? <p className="text-xs" style={{ color: C.muted }}>As notificações estão bloqueadas no navegador. Libere nas configurações do site pra usar.</p> : null}
+      <p className="text-xs" style={{ color: C.muted }}>Por enquanto o lembrete aparece quando você abre o app. O aviso com o app fechado virá quando ligarmos o servidor.</p>
+    </div>
+  );
+}
+function ShareCardView({ s, fireToast }) {
+  const canvasRef = useRef(null);
+  const [preview, setPreview] = useState("");
+
+  useEffect(() => { draw(); }, []);
+
+  const draw = () => {
+    const cv = canvasRef.current; if (!cv) return;
+    const W = 1080, H = 1920; cv.width = W; cv.height = H;
+    const ctx = cv.getContext("2d");
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#0A0A0A"); g.addColorStop(1, "#161616");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(212,175,55,0.45)"; ctx.lineWidth = 4;
+    ctx.strokeRect(44, 44, W - 88, H - 88);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#D4AF37"; ctx.font = "800 88px system-ui, sans-serif";
+    ctx.fillText("VIVON", W / 2, 230);
+    ctx.fillStyle = "#8A8A8A"; ctx.font = "600 30px system-ui, sans-serif";
+    ctx.fillText("E V O L U Ç Ã O   P E S S O A L", W / 2, 282);
+
+    const score = vivonScore(s);
+    const cx = W / 2, cy = 780, r = 250;
+    ctx.lineWidth = 36; ctx.lineCap = "round";
+    ctx.strokeStyle = "#1F1F1F"; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = "#D4AF37"; ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (Math.max(0, Math.min(100, score)) / 100)); ctx.stroke();
+    ctx.fillStyle = "#FFFFFF"; ctx.font = "800 180px system-ui, sans-serif"; ctx.fillText(String(score), cx, cy + 52);
+    ctx.fillStyle = "#8A8A8A"; ctx.font = "600 36px system-ui, sans-serif"; ctx.fillText("VIVON SCORE", cx, cy + 150);
+
+    const li = levelInfo(s.xp);
+    const stats = [["NÍVEL", String(li.level)], ["SEQUÊNCIA", s.streak + "d"], ["XP", String(s.xp)]];
+    const baseY = 1280;
+    stats.forEach((st, i) => {
+      const x = W / 2 + (i - 1) * 310;
+      ctx.fillStyle = "#D4AF37"; ctx.font = "800 88px system-ui, sans-serif"; ctx.fillText(st[1], x, baseY);
+      ctx.fillStyle = "#8A8A8A"; ctx.font = "600 30px system-ui, sans-serif"; ctx.fillText(st[0], x, baseY + 54);
+    });
+
+    const nome = (s.profile.name || "").trim();
+    if (nome) { ctx.fillStyle = "#FFFFFF"; ctx.font = "700 54px system-ui, sans-serif"; ctx.fillText(nome, W / 2, 1520); }
+    const msg = score >= 85 ? "Dia impecável." : score >= 60 ? "No ritmo certo." : score >= 30 ? "Construindo a evolução." : "Começando a jornada.";
+    ctx.fillStyle = "#D4AF37"; ctx.font = "600 42px system-ui, sans-serif"; ctx.fillText(msg, W / 2, nome ? 1590 : 1540);
+
+    ctx.fillStyle = "#8A8A8A"; ctx.font = "600 34px system-ui, sans-serif"; ctx.fillText("vivonia.netlify.app", W / 2, H - 130);
+
+    setPreview(cv.toDataURL("image/png"));
+  };
+
+  const baixar = () => {
+    const cv = canvasRef.current; if (!cv) return;
+    const a = document.createElement("a"); a.href = cv.toDataURL("image/png"); a.download = "vivon-evolucao.png";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    if (fireToast) fireToast("Imagem baixada!");
+  };
+
+  const compartilhar = () => {
+    const cv = canvasRef.current; if (!cv) return;
+    cv.toBlob(async (blob) => {
+      if (!blob) { baixar(); return; }
+      const file = new File([blob], "vivon-evolucao.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: "Minha evolução no VIVON" }); } catch (e) {}
+      } else { baixar(); if (fireToast) fireToast("Compartilhamento direto indisponível — imagem baixada."); }
+    }, "image/png");
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
+        Gere uma imagem da sua evolução pra postar no story e inspirar a galera. Cada post seu atrai gente nova.
+      </p>
+      <canvas ref={canvasRef} style={{ display: "none" }} />
+      {preview ? <img src={preview} className="w-full rounded-2xl" style={{ border: `1px solid ${C.border}` }} /> : null}
+      <Btn onClick={compartilhar}>Compartilhar <Send size={18} /></Btn>
+      <button onClick={baixar} className="w-full rounded-2xl py-4 font-bold flex items-center justify-center gap-2" style={{ background: C.card, color: C.gold, border: `1px solid ${C.border}`, cursor: "pointer" }}>Baixar imagem</button>
+    </div>
+  );
+}
+function PhotosView({ s, update, fireToast }) {
+  const fileRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const all = s.photos || [];
+  const lista = all.slice().reverse();
+  const antes = all[0];
+  const depois = all.length > 1 ? all[all.length - 1] : null;
+
+  const onPick = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setBusy(true);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 720;
+        let w = img.width, h = img.height;
+        if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+        else if (h > max) { w = Math.round(w * max / h); h = max; }
+        const cv = document.createElement("canvas");
+        cv.width = w; cv.height = h;
+        cv.getContext("2d").drawImage(img, 0, 0, w, h);
+        const data = cv.toDataURL("image/jpeg", 0.55);
+        const novo = { id: Date.now().toString(), date: today(), img: data };
+        update(p => {
+          let arr = [...(p.photos || []), novo];
+          if (arr.length > 12) arr = [arr[0], ...arr.slice(-11)];
+          return { ...p, photos: arr };
+        });
+        setBusy(false);
+        if (fireToast) fireToast("Foto adicionada!");
+      };
+      img.onerror = () => { setBusy(false); if (fireToast) fireToast("Imagem inválida."); };
+      img.src = reader.result;
+    };
+    reader.onerror = () => { setBusy(false); if (fireToast) fireToast("Não consegui ler a foto."); };
+    reader.readAsDataURL(file);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const remover = (id) => {
+    if (!confirm("Apagar esta foto?")) return;
+    update(p => ({ ...p, photos: (p.photos || []).filter(x => x.id !== id) }));
+  };
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
+        Tire uma foto a cada semana, sempre no mesmo ângulo e luz. Com o tempo, você vê sua evolução de verdade.
+      </p>
+
+      {antes && depois ? (
+        <div>
+          <p className="text-xs font-bold mb-2" style={{ color: C.gold, letterSpacing: ".12em" }}>ANTES E DEPOIS</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <img src={antes.img} className="w-full rounded-xl" style={{ aspectRatio: "3/4", objectFit: "cover", border: `1px solid ${C.border}` }} />
+              <p className="text-center text-xs mt-1" style={{ color: C.muted }}>{antes.date}</p>
+            </div>
+            <div>
+              <img src={depois.img} className="w-full rounded-xl" style={{ aspectRatio: "3/4", objectFit: "cover", border: `1px solid ${C.gold}` }} />
+              <p className="text-center text-xs mt-1" style={{ color: C.gold }}>{depois.date}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <Btn onClick={() => fileRef.current && fileRef.current.click()} disabled={busy}>{busy ? "Processando..." : "Adicionar foto"} <Plus size={18} /></Btn>
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onPick} style={{ display: "none" }} />
+
+      {lista.length > 0 ? (
+        <div>
+          <p className="text-xs font-bold mb-2" style={{ color: C.muted, letterSpacing: ".12em" }}>TODAS AS FOTOS ({lista.length})</p>
+          <div className="grid grid-cols-3 gap-2">
+            {lista.map(ph => (
+              <div key={ph.id} style={{ position: "relative" }}>
+                <img src={ph.img} className="w-full rounded-xl" style={{ aspectRatio: "3/4", objectFit: "cover", border: `1px solid ${C.border}` }} />
+                <button onClick={() => remover(ph.id)} aria-label="Apagar" style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><X size={14} style={{ color: "#fff" }} /></button>
+                <p className="text-center" style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>{ph.date}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <p className="text-xs" style={{ color: C.muted }}>As fotos ficam só neste aparelho (até 12). Faça backup no menu do Perfil pra não perder.</p>
+    </div>
+  );
+}
+function BackupView({ s, update, fireToast }) {
+  const fileRef = useRef(null);
+
+  const exportar = () => {
+    try {
+      const blob = new Blob([JSON.stringify(s, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "vivon-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      if (fireToast) fireToast("Backup baixado!");
+    } catch { if (fireToast) fireToast("Não consegui exportar."); }
+  };
+
+  const importar = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const obj = JSON.parse(reader.result);
+        if (!obj || typeof obj !== "object" || (obj.profile === undefined && obj.xp === undefined)) {
+          if (fireToast) fireToast("Arquivo inválido.");
+        } else if (confirm("Isso vai substituir seus dados atuais pelos do backup. Continuar?")) {
+          update(() => ({ ...DEFAULT, ...obj }));
+          if (fireToast) fireToast("Dados restaurados!");
+        }
+      } catch { if (fireToast) fireToast("Não consegui ler o arquivo."); }
+      if (fileRef.current) fileRef.current.value = "";
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
+        Seus dados ficam salvos neste aparelho. Faça um backup para não perder seu progresso se trocar de celular ou limpar o navegador.
+      </p>
+      <Btn onClick={exportar}>Exportar meus dados <TrendingUp size={18} /></Btn>
+      <button onClick={() => fileRef.current && fileRef.current.click()} className="w-full rounded-2xl py-4 font-bold flex items-center justify-center gap-2" style={{ background: C.card, color: C.gold, border: `1px solid ${C.border}`, cursor: "pointer" }}>
+        Importar backup
+      </button>
+      <input ref={fileRef} type="file" accept="application/json,.json" onChange={importar} style={{ display: "none" }} />
+      <p className="text-xs" style={{ color: C.muted }}>O arquivo é um .json — guarde no Google Drive, email ou onde preferir.</p>
+    </div>
+  );
+}
+function EditProfile({ s, update, fireToast, onDone }) {
+  const [p, setP] = useState({ ...s.profile });
+  const set = (k, v) => setP(x => ({ ...x, [k]: v }));
+  const num = (k, v) => { let x = v.replace(/[^0-9.]/g, ""); if (k !== "weight") x = x.replace(/\./g, ""); const pr = x.split("."); if (pr.length > 2) x = pr[0] + "." + pr.slice(1).join(""); set(k, x); };
+  const save = () => { update({ profile: p }); if (fireToast) fireToast("Perfil salvo!"); if (onDone) onDone(); };
+  return (
+    <div className="space-y-5">
+      <div>
+        <p className="text-sm font-semibold mb-2" style={{ color: C.muted }}>Seu nome</p>
+        <input value={p.name} onChange={e => set("name", e.target.value)} placeholder="Seu nome" className="w-full rounded-2xl px-5 py-4 text-lg outline-none" style={{ background: C.card, color: C.white, border: `1px solid ${C.border}` }} />
+      </div>
+      <div>
+        <p className="text-sm font-semibold mb-2" style={{ color: C.muted }}>Objetivo</p>
+        <div className="grid grid-cols-1 gap-2.5">{GOALS.map(g => <Choice key={g.k} active={p.goal === g.k} onClick={() => set("goal", g.k)}><span className="text-2xl">{g.e}</span><span className="font-semibold">{g.t}</span></Choice>)}</div>
+      </div>
+      <div>
+        <p className="text-sm font-semibold mb-2" style={{ color: C.muted }}>Nível</p>
+        <div className="grid grid-cols-1 gap-2.5">{LEVELS.map(l => <Choice key={l.k} active={p.level === l.k} onClick={() => set("level", l.k)}><span className="font-semibold">{l.t}</span></Choice>)}</div>
+      </div>
+      <div>
+        <p className="text-sm font-semibold mb-2" style={{ color: C.muted }}>Seus dados</p>
+        <div className="flex flex-col gap-3">
+          {[["age", "Idade", "anos"], ["weight", "Peso", "kg"], ["height", "Altura", "cm"]].map(([k, lbl, u]) => (
+            <div key={k} className="flex items-center rounded-2xl px-5 py-4" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+              <span style={{ color: C.muted }}>{lbl}</span>
+              <input type="text" value={p[k]} inputMode={k === "weight" ? "decimal" : "numeric"} onChange={e => num(k, e.target.value)} className="flex-1 ml-4 bg-transparent text-right text-xl font-semibold outline-none" style={{ color: C.white, minWidth: 0 }} placeholder="—" />
+              <span className="ml-3 text-sm" style={{ color: C.muted, minWidth: 30 }}>{u}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Btn onClick={save}>Salvar perfil <Check size={18} /></Btn>
     </div>
   );
 }
