@@ -426,9 +426,37 @@ const DEFAULT = {
 
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
 
+const ACCESS_PASSWORDS = ["VIVON-9K3P", "VIVON-4M7X", "VIVON-2T8R", "VIVON-6B1N", "VIVON-5Z9Q"];
+function AccessGate({ onUnlock }) {
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState(false);
+  const tryUnlock = () => {
+    const val = pw.trim().toUpperCase();
+    if (ACCESS_PASSWORDS.map(p => p.toUpperCase()).includes(val)) {
+      try { localStorage.setItem("vivon-access", "1"); } catch (e) {}
+      onUnlock();
+    } else { setErr(true); }
+  };
+  return (
+    <div style={{ background: C.bg, color: C.white, minHeight: "100vh" }} className="w-full flex flex-col items-center justify-center px-6">
+      <div style={{ maxWidth: 380, width: "100%" }} className="flex flex-col items-center text-center">
+        <div style={{ width: 72, height: 72, borderRadius: "50%", border: `2px solid ${C.gold}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+          <span style={{ color: C.gold, fontSize: 34, fontWeight: 800 }}>V</span>
+        </div>
+        <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 8, letterSpacing: ".1em" }}>VIVON</h1>
+        <p style={{ color: C.muted, fontSize: 14, lineHeight: 1.5, marginBottom: 28 }}>Digite sua senha de acesso para entrar. Você recebeu ela no e-mail da sua compra.</p>
+        <input type="text" value={pw} onChange={(e) => { setPw(e.target.value); setErr(false); }} onKeyDown={(e) => { if (e.key === "Enter") tryUnlock(); }} placeholder="Sua senha de acesso" autoCapitalize="characters" autoCorrect="off" spellCheck="false" style={{ width: "100%", background: C.card, border: `1px solid ${err ? "#E0533B" : C.border}`, borderRadius: 14, padding: "14px 16px", color: C.white, fontSize: 16, textAlign: "center", letterSpacing: ".08em", outline: "none", marginBottom: 12 }} />
+        {err ? <p style={{ color: "#E0533B", fontSize: 13, marginBottom: 12 }}>Senha inválida. Confira o e-mail da sua compra.</p> : null}
+        <button onClick={tryUnlock} className="w-full rounded-2xl py-4 font-bold" style={{ background: `linear-gradient(180deg, #EBCB6E, ${C.gold})`, color: "#000", border: "none", cursor: "pointer", fontSize: 16 }}>Entrar</button>
+        <p style={{ color: C.muted, fontSize: 12, marginTop: 20 }}>Ainda não tem acesso? Assine o VIVON para receber sua senha.</p>
+      </div>
+    </div>
+  );
+}
 function VivonApp() {
   const [s, setS] = useState(null);
   const [toast, setToast] = useState("");
+  const [access, setAccess] = useState(() => { try { return localStorage.getItem("vivon-access") === "1"; } catch (e) { return false; } });
   const loaded = useRef(false);
   const toastTimer = useRef(null);
 
@@ -511,6 +539,7 @@ function VivonApp() {
   }
 
   if (!s) return <Splash />;
+  if (!access) return <AccessGate onUnlock={() => setAccess(true)} />;
 
   const award = (amount) => {
     const before = s ? levelInfo(s.xp).level : 0;
