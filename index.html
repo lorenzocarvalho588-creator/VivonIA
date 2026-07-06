@@ -609,29 +609,62 @@ function Onboarding({ s, update, award }) {
   const next = () => update({ obStep: step + 1, profile: p });
   const finish = () => { update({ screen: "app", profile: p, obStep: 0 }); award(100); };
 
+  if (step === 0) {
+    return (
+      <Wrap>
+        <div className="flex-1 flex flex-col items-center justify-center text-center" style={{ gap: 30 }}>
+          <div style={{ position: "relative", animation: "vFade .9s ease both" }}>
+            <div aria-hidden style={{ position: "absolute", inset: "-64px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.30), transparent 62%)", filter: "blur(22px)", animation: "vPulse 4.5s ease-in-out infinite" }} />
+            <div style={{ position: "relative" }}><Logo size={58} /></div>
+          </div>
+          <div className="flex flex-col items-center" style={{ gap: 18, animation: "vFade 1s ease both", animationDelay: ".18s" }}>
+            <div className="flex items-center gap-3">
+              <span style={{ height: 1, width: 30, background: `linear-gradient(90deg, transparent, ${C.gold})` }} />
+              <p style={{ color: C.gold, letterSpacing: "0.34em", fontSize: 11, fontWeight: 600 }}>EVOLUA TODOS OS DIAS</p>
+              <span style={{ height: 1, width: 30, background: `linear-gradient(90deg, ${C.gold}, transparent)` }} />
+            </div>
+            <p style={{ color: "#CFCFCF" }} className="text-lg max-w-[280px] leading-relaxed font-light">Corpo, mente, hábitos e disciplina em uma única plataforma movida por inteligência artificial.</p>
+          </div>
+        </div>
+        <div style={{ animation: "vFade 1s ease both", animationDelay: ".34s" }}>
+          <Btn onClick={next}>Começar minha evolução <ArrowRight size={18} /></Btn>
+          <p className="text-center text-xs mt-4" style={{ color: C.muted }}>Leva menos de 1 minuto.</p>
+        </div>
+      </Wrap>
+    );
+  }
+
   return (
     <Wrap>
-      <div className="flex-1 flex flex-col items-center justify-center text-center" style={{ gap: 30 }}>
-        <div style={{ position: "relative", animation: "vFade .9s ease both" }}>
-          <div aria-hidden style={{ position: "absolute", inset: "-64px", borderRadius: "50%", background: "radial-gradient(circle, rgba(212,175,55,0.30), transparent 62%)", filter: "blur(22px)", animation: "vPulse 4.5s ease-in-out infinite" }} />
-          <div style={{ position: "relative" }}><Logo size={58} /></div>
+      <div className="flex-1 flex flex-col justify-center" style={{ gap: 22 }}>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-1">Vamos te conhecer</h2>
+          <p style={{ color: C.muted }} className="text-sm">Isso deixa o VIVON e a IA personalizados pra você.</p>
         </div>
-        <div className="flex flex-col items-center" style={{ gap: 18, animation: "vFade 1s ease both", animationDelay: ".18s" }}>
-          <div className="flex items-center gap-3">
-            <span style={{ height: 1, width: 30, background: `linear-gradient(90deg, transparent, ${C.gold})` }} />
-            <p style={{ color: C.gold, letterSpacing: "0.34em", fontSize: 11, fontWeight: 600 }}>EVOLUA TODOS OS DIAS</p>
-            <span style={{ height: 1, width: 30, background: `linear-gradient(90deg, ${C.gold}, transparent)` }} />
+        <div>
+          <label className="text-xs font-bold" style={{ color: C.muted, letterSpacing: ".1em" }}>SEU NOME</label>
+          <input value={p.name || ""} onChange={(e) => set("name", e.target.value)} placeholder="Como quer ser chamado?" style={{ width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "13px 16px", color: C.white, fontSize: 16, outline: "none", marginTop: 8 }} />
+        </div>
+        <div>
+          <label className="text-xs font-bold" style={{ color: C.muted, letterSpacing: ".1em" }}>SEU OBJETIVO</label>
+          <div className="grid grid-cols-2 gap-2" style={{ marginTop: 8 }}>
+            {GOALS.map(g => {
+              const sel = p.goal === g.k;
+              return (
+                <button key={g.k} onClick={() => set("goal", g.k)} className="rounded-2xl px-3 py-3 text-left flex items-center gap-2" style={{ background: sel ? "rgba(212,175,55,0.12)" : C.card, border: `1.5px solid ${sel ? C.gold : C.border}`, color: C.white, cursor: "pointer" }}>
+                  <span style={{ fontSize: 20 }}>{g.e}</span><span className="font-semibold text-sm">{g.t}</span>
+                </button>
+              );
+            })}
           </div>
-          <p style={{ color: "#CFCFCF" }} className="text-lg max-w-[280px] leading-relaxed font-light">Corpo, mente, hábitos e disciplina em uma única plataforma movida por inteligência artificial.</p>
         </div>
       </div>
-      <div style={{ animation: "vFade 1s ease both", animationDelay: ".34s" }}>
-        <Btn onClick={finish}>Começar minha evolução <ArrowRight size={18} /></Btn>
-        <p className="text-center text-xs mt-4" style={{ color: C.muted }}>Sua evolução começa agora.</p>
+      <div>
+        <Btn onClick={finish} disabled={!p.name || !p.name.trim()}>Entrar no VIVON <ArrowRight size={18} /></Btn>
+        <p className="text-center text-xs mt-3" style={{ color: C.muted }}>Você pode mudar isso depois no Perfil.</p>
       </div>
     </Wrap>
   );
-
 }
 function Header({ t, sub }) { return <div className="mb-7" style={{ animation: "vFade .6s ease both" }}><div className="mb-6"><Logo size={26} /></div><h1 className="text-2xl font-bold mb-1.5" style={{ letterSpacing: "-0.01em" }}>{t}</h1><p style={{ color: C.muted }}>{sub}</p></div>; }
 function Choice({ active, onClick, children }) { return <button onClick={onClick} className="flex items-center gap-3 rounded-2xl px-5 py-4 text-left transition" style={{ background: active ? "rgba(212,175,55,0.12)" : C.card, border: `1.5px solid ${active ? C.gold : C.border}`, color: C.white }}>{children}{active && <Check size={18} className="ml-auto" style={{ color: C.gold }} />}</button>; }
@@ -657,6 +690,34 @@ function MiniBars({ dates, data, max }) {
   return <div className="flex items-end justify-between gap-1" style={{ height: 80 }}>{dates.map(d => { const h = Math.max(4, ((data[d] || 0) / m) * 70); const t = d === today(); return <div key={d} className="flex-1 rounded-sm" style={{ height: h, background: t ? C.gold : "rgba(212,175,55,0.28)" }} />; })}</div>;
 }
 
+function FirstSteps({ s }) {
+  const steps = [
+    { t: "Registre seu peso", done: (s.weights || []).length > 0 },
+    { t: "Faça seu primeiro treino", done: (s.workouts || []).length > 0 },
+    { t: "Registre sua água do dia", done: waterToday(s) > 0 },
+    { t: "Adicione uma foto de progresso", done: (s.photos || []).length > 0 },
+  ];
+  const doneCount = steps.filter(x => x.done).length;
+  if (doneCount === steps.length) return null;
+  return (
+    <div className="rounded-2xl px-4 py-4 mb-5" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="font-bold text-sm">Primeiros passos</p>
+        <span className="text-xs font-bold" style={{ color: C.gold }}>{doneCount}/{steps.length}</span>
+      </div>
+      <div className="flex flex-col gap-2.5">
+        {steps.map((st, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div style={{ width: 20, height: 20, borderRadius: "50%", border: `1.5px solid ${st.done ? C.gold : C.border}`, background: st.done ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {st.done ? <Check size={13} style={{ color: "#000" }} /> : null}
+            </div>
+            <span className="text-sm" style={{ color: st.done ? C.muted : C.white, textDecoration: st.done ? "line-through" : "none" }}>{st.t}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 function HomeTab({ s, update }) {
   const li = levelInfo(s.xp);
   const hour = new Date().getHours();
@@ -680,6 +741,7 @@ function HomeTab({ s, update }) {
         <Logo size={22} />
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: C.card, border: `1px solid ${C.border}` }}><Flame size={15} style={{ color: C.gold }} /><span className="text-sm font-bold">{s.streak}</span></div>
       </div>
+      <FirstSteps s={s} />
       <p style={{ color: C.muted }} className="text-sm">{greet},</p>
       <h1 className="text-2xl font-bold mb-4">{s.profile.name || "atleta"} 👋</h1>
 
