@@ -1021,12 +1021,10 @@ function ProfileTab({ s, update, award, fireToast }) {
   if (view === "levels") return <Panel title="Níveis & Recompensas" onBack={() => setView("hub")}><LevelsView s={s} /></Panel>;
   if (view === "challenges") return <Panel title="Desafios" onBack={() => setView("hub")}><ChallengesView s={s} update={update} /></Panel>;
   if (view === "library") return <Panel title="Biblioteca Premium" onBack={() => setView("hub")}><LibraryView s={s} fireToast={fireToast} /></Panel>;
-  if (view === "referral") return <Panel title="Indique e ganhe" onBack={() => setView("hub")}><ReferralView s={s} fireToast={fireToast} /></Panel>;
   if (view === "edit") return <Panel title="Editar perfil" onBack={() => setView("hub")}><EditProfile s={s} update={update} fireToast={fireToast} onDone={() => setView("hub")} /></Panel>;
   if (view === "backup") return <Panel title="Backup dos meus dados" onBack={() => setView("hub")}><BackupView s={s} update={update} fireToast={fireToast} /></Panel>;
   if (view === "photos") return <Panel title="Fotos de progresso" onBack={() => setView("hub")}><PhotosView s={s} update={update} fireToast={fireToast} /></Panel>;
   if (view === "share") return <Panel title="Compartilhar evolução" onBack={() => setView("hub")}><ShareCardView s={s} fireToast={fireToast} /></Panel>;
-  if (view === "reminders") return <Panel title="Lembretes" onBack={() => setView("hub")}><RemindersView s={s} update={update} fireToast={fireToast} /></Panel>;
   if (view === "week") return <Panel title="Resumo da semana" onBack={() => setView("hub")}><WeeklySummaryView s={s} /></Panel>;
   if (view === "weight") return <Panel title="Histórico de peso" onBack={() => setView("hub")}><WeightChartView s={s} /></Panel>;
   if (view === "goals") return <Panel title="Metas da semana" onBack={() => setView("hub")}><WeeklyGoalsView s={s} /></Panel>;
@@ -1038,7 +1036,6 @@ function ProfileTab({ s, update, award, fireToast }) {
     { k: "backup", t: "Backup dos meus dados", icon: Copy, sub: "Exportar e importar" },
     { k: "photos", t: "Fotos de progresso", icon: Activity, sub: "Seu antes e depois" },
     { k: "share", t: "Compartilhar evolução", icon: Sparkles, sub: "Imagem pro Instagram" },
-    { k: "reminders", t: "Lembretes", icon: Bell, sub: "Avisos de sequência" },
     { k: "week", t: "Resumo da semana", icon: BarChart3, sub: "Seus últimos 7 dias" },
     { k: "weight", t: "Histórico de peso", icon: Scale, sub: "Gráfico de evolução" },
     { k: "goals", t: "Metas da semana", icon: Target, sub: "Renovam toda segunda" },
@@ -1046,7 +1043,6 @@ function ProfileTab({ s, update, award, fireToast }) {
     { k: "levels", t: "Níveis & Recompensas", icon: Crown, sub: `Nível ${li.level}` },
     { k: "challenges", t: "Desafios", icon: Rocket, sub: s.challenge ? "Em andamento" : "Começar" },
     { k: "library", t: "Biblioteca Premium", icon: BookOpen, sub: "5 categorias" },
-    { k: "referral", t: "Indique e ganhe", icon: Gift, sub: "Recompensas" },
   ];
   const reset = () => { if (confirm("Isso vai apagar todo o seu progresso. Tem certeza?")) { try { localStorage.setItem("vivon-state", JSON.stringify(DEFAULT)); } catch {} update(() => ({ ...DEFAULT })); } };
 
