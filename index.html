@@ -1535,7 +1535,75 @@ function Panel({ title, onBack, children }) { return (<div className="px-5 pt-6"
 function Achievements({ s }) { return (<div className="grid grid-cols-2 gap-3">{ACHV.map(a => { const got = s.achievements.includes(a.id); return (<div key={a.id} className="rounded-2xl p-3.5 flex flex-col gap-1.5" style={{ background: a.rare ? "linear-gradient(135deg, rgba(212,175,55,0.14), rgba(20,20,20,1))" : C.card, border: `1px solid ${got ? C.gold : C.border}`, opacity: got ? 1 : 0.4 }}><div className="flex items-center justify-between"><a.icon size={20} style={{ color: got ? C.gold : C.muted }} />{a.rare && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.2)", color: C.gold }}>RARA</span>}</div><span className="font-semibold text-sm">{a.name}</span><span className="text-[11px]" style={{ color: C.muted }}>{a.desc}</span></div>); })}</div>); }
 function LevelsView({ s }) { const li = levelInfo(s.xp); return (<div className="space-y-3"><Card className="text-center"><p className="text-sm" style={{ color: C.muted }}>Seu nível</p><p className="text-4xl font-bold" style={{ color: C.gold }}>{li.level}<span className="text-lg" style={{ color: C.muted }}>/100</span></p><div className="h-2 rounded-full overflow-hidden mt-3" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${li.pct}%`, background: C.gold }} /></div><p className="text-xs mt-2" style={{ color: C.muted }}>{li.current}/{li.need} XP para o próximo</p></Card><div className="space-y-2">{LEVEL_REWARDS.map(r => { const got = li.level >= r.lvl; return (<div key={r.lvl} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${got ? C.gold : C.border}`, opacity: got ? 1 : 0.55 }}><div className="rounded-lg p-2" style={{ background: got ? "rgba(212,175,55,0.15)" : C.cardL }}>{got ? <r.icon size={18} style={{ color: C.gold }} /> : <Lock size={18} style={{ color: C.muted }} />}</div><div className="flex-1"><p className="font-semibold text-sm">{r.t}</p><p className="text-xs" style={{ color: C.muted }}>Nível {r.lvl}</p></div>{got && <Check size={16} style={{ color: C.gold }} />}</div>); })}</div></div>); }
 function ChallengesView({ s, update }) { const start = (k) => update({ challenge: { k, start: today(), done: [] } }); return (<div className="space-y-3">{s.challenge && <ChallengeCard s={s} update={update} />}{!s.challenge && CHALLENGES.map(c => (<button key={c.k} onClick={() => start(c.k)} className="w-full text-left rounded-2xl p-4" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="flex items-center justify-between mb-1"><span className="font-bold flex items-center gap-2"><Rocket size={17} style={{ color: C.gold }} />{c.t}</span><span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(212,175,55,0.15)", color: C.gold }}>{c.days} dias</span></div><p className="text-sm" style={{ color: C.muted }}>{c.desc}</p></button>))}{s.challenge && <p className="text-xs text-center" style={{ color: C.muted }}>Conclua o desafio atual para iniciar outro.</p>}</div>); }
-function LibraryView({ s, fireToast }) { const cats = Object.keys(LIBRARY); const [cat, setCat] = useState(cats[0]); const li = levelInfo(s.xp); return (<div><div className="flex gap-2 overflow-x-auto pb-3">{cats.map(c => <button key={c} onClick={() => setCat(c)} className="px-3.5 py-2 rounded-full whitespace-nowrap text-sm font-semibold" style={{ background: cat === c ? C.gold : C.card, color: cat === c ? "#000" : C.white, border: `1px solid ${cat === c ? C.gold : C.border}` }}>{c}</button>)}</div><div className="space-y-2.5">{LIBRARY[cat].map((it, i) => { const locked = li.level < it.lvl; return (<button key={i} onClick={() => fireToast(locked ? `🔒 Desbloqueia no nível ${it.lvl}` : "▶ Conteúdo em breve")} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: C.card, border: `1px solid ${C.border}`, opacity: locked ? 0.55 : 1 }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}>{locked ? <Lock size={16} style={{ color: C.muted }} /> : <BookOpen size={16} style={{ color: C.gold }} />}</div><div className="flex-1 text-left"><p className="font-semibold text-sm">{it.t}</p><p className="text-xs" style={{ color: C.muted }}>{locked ? `Nível ${it.lvl}` : it.d}</p></div>{!locked && <ChevronRight size={16} style={{ color: C.muted }} />}</button>); })}</div></div>); }
+function LibraryView({ s, fireToast }) {
+  const cats = Object.keys(LIBRARY);
+  const [cat, setCat] = useState(cats[0]);
+  const [open, setOpen] = useState(null);
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [cache, setCache] = useState({});
+  const li = levelInfo(s.xp);
+
+  const read = async (it) => {
+    setOpen(it);
+    if (cache[it.t]) { setText(cache[it.t]); setLoading(false); return; }
+    setText(""); setLoading(true);
+    try {
+      const res = await fetch(AI_ENDPOINT, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          max_tokens: 1000,
+          system: "Você é um mentor do VIVON. Escreva um guia prático e direto em português do Brasil sobre o tema pedido, para quem quer evoluir corpo e mente. Linguagem motivadora, sem enrolação. Estrutura: um parágrafo de abertura, de 3 a 5 pontos práticos aplicáveis hoje, e uma frase final de ação. Texto limpo, sem markdown pesado.",
+          messages: [{ role: "user", content: `Escreva o guia "${it.t}" (categoria ${cat}), para ${s.profile.name || "o usuário"}.` }]
+        })
+      });
+      const d = await res.json();
+      const txt = (d.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim() || "Não consegui gerar agora. Tenta de novo.";
+      setText(txt);
+      setCache(c => ({ ...c, [it.t]: txt }));
+    } catch { setText("Não consegui conectar com a IA agora. Tenta de novo em instantes."); }
+    finally { setLoading(false); }
+  };
+
+  if (open) {
+    return (
+      <div>
+        <button onClick={() => setOpen(null)} className="flex items-center gap-2 mb-4 text-sm font-semibold" style={{ color: C.gold }}><ChevronLeft size={16} /> Voltar à biblioteca</button>
+        <h2 className="text-lg font-bold mb-1">{open.t}</h2>
+        <p className="text-xs mb-4" style={{ color: C.muted }}>{cat} · {open.d} de leitura</p>
+        {loading ? (
+          <div className="flex items-center gap-2 text-sm py-6" style={{ color: C.muted }}><Sparkles size={16} style={{ color: C.gold }} /> Gerando seu guia com a IA...</div>
+        ) : (
+          <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "#E0E0E0" }}>{text}</div>
+        )}
+        {!loading && (() => {
+          const relacionados = LIBRARY[cat].filter(x => x.t !== open.t && li.level >= x.lvl).slice(0, 3);
+          if (relacionados.length === 0) return null;
+          return (
+            <div className="mt-7 pt-5" style={{ borderTop: `1px solid ${C.border}` }}>
+              <p className="text-xs font-bold mb-3" style={{ color: C.gold, letterSpacing: ".12em" }}>CONTINUE LENDO</p>
+              <div className="space-y-2.5">{relacionados.map((r, i) => (
+                <button key={i} onClick={() => read(r)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+                  <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}><BookOpen size={16} style={{ color: C.gold }} /></div>
+                  <div className="flex-1 text-left"><p className="font-semibold text-sm">{r.t}</p><p className="text-xs" style={{ color: C.muted }}>{r.d} de leitura</p></div>
+                  <ChevronRight size={16} style={{ color: C.muted }} />
+                </button>
+              ))}</div>
+            </div>
+          );
+        })()}
+        <div className="h-6" />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex gap-2 overflow-x-auto pb-3">{cats.map(c => <button key={c} onClick={() => setCat(c)} className="px-3.5 py-2 rounded-full whitespace-nowrap text-sm font-semibold" style={{ background: cat === c ? C.gold : C.card, color: cat === c ? "#000" : C.white, border: `1px solid ${cat === c ? C.gold : C.border}` }}>{c}</button>)}</div>
+      <div className="space-y-2.5">{LIBRARY[cat].map((it, i) => { const locked = li.level < it.lvl; return (<button key={i} onClick={() => locked ? fireToast(`🔒 Desbloqueia no nível ${it.lvl}`) : read(it)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: C.card, border: `1px solid ${C.border}`, opacity: locked ? 0.55 : 1 }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}>{locked ? <Lock size={16} style={{ color: C.muted }} /> : <BookOpen size={16} style={{ color: C.gold }} />}</div><div className="flex-1 text-left"><p className="font-semibold text-sm">{it.t}</p><p className="text-xs" style={{ color: C.muted }}>{locked ? `Nível ${it.lvl}` : it.d}</p></div>{!locked && <ChevronRight size={16} style={{ color: C.muted }} />}</button>); })}</div>
+    </div>
+  );
+}
 function ReferralView({ s, fireToast }) { const code = "VIVON-" + (s.profile.name || "VOCE").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6); const copy = () => { try { navigator.clipboard.writeText(code); fireToast("Código copiado!"); } catch { fireToast(code); } }; const tiers = [{ n: 1, r: "7 dias grátis", icon: Star }, { n: 3, r: "1 mês grátis", icon: Medal }, { n: 5, r: "Tema exclusivo Ouro", icon: Crown }]; return (<div className="space-y-4"><Card className="text-center" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(20,20,20,1))" }}><Gift size={28} style={{ color: C.gold }} className="mx-auto mb-2" /><p className="text-sm" style={{ color: C.muted }}>Seu código de indicação</p><p className="text-2xl font-bold tracking-wider my-2" style={{ color: C.gold }}>{code}</p><button onClick={copy} className="rounded-xl px-5 py-2.5 text-sm font-bold inline-flex items-center gap-2" style={{ background: C.gold, color: "#000" }}><Copy size={15} />Copiar código</button></Card><p className="text-sm font-semibold">Cada amigo que assinar te dá:</p><div className="space-y-2.5">{tiers.map(t => (<div key={t.n} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}><t.icon size={18} style={{ color: C.gold }} /></div><div className="flex-1"><p className="font-semibold text-sm">{t.r}</p><p className="text-xs" style={{ color: C.muted }}>Com {t.n} {t.n === 1 ? "indicação" : "indicações"}</p></div></div>))}</div><p className="text-xs text-center" style={{ color: C.muted }}>Indicações ativas: 0 · conecte ao backend para rastrear automaticamente.</p></div>); }
 
 function Nav({ tab, setTab }) {
