@@ -1100,7 +1100,6 @@ function ProfileTab({ s, update, award, fireToast }) {
   const g = GOALS.find(x => x.k === s.profile.goal);
   const items = [
     { k: "edit", t: "Editar perfil", icon: User, sub: "Nome, objetivo e dados" },
-    { k: "backup", t: "Backup dos meus dados", icon: Copy, sub: "Exportar e importar" },
     { k: "share", t: "Compartilhar evolução", icon: Sparkles, sub: "Imagem pro Instagram" },
     { k: "week", t: "Resumo da semana", icon: BarChart3, sub: "Seus últimos 7 dias" },
     { k: "weight", t: "Histórico de peso", icon: Scale, sub: "Gráfico de evolução" },
@@ -1109,6 +1108,7 @@ function ProfileTab({ s, update, award, fireToast }) {
     { k: "levels", t: "Níveis & Recompensas", icon: Crown, sub: `Nível ${li.level}` },
     { k: "challenges", t: "Desafios", icon: Rocket, sub: s.challenge ? "Em andamento" : "Começar" },
     { k: "library", t: "Biblioteca Premium", icon: BookOpen, sub: "5 categorias" },
+    { k: "backup", t: "Backup dos meus dados", icon: Copy, sub: "Exportar e importar" },
   ];
   const reset = () => { if (confirm("Isso vai apagar todo o seu progresso. Tem certeza?")) { try { localStorage.setItem("vivon-state", JSON.stringify(DEFAULT)); } catch {} update(() => ({ ...DEFAULT })); } };
 
@@ -1343,7 +1343,6 @@ function ShareCardView({ s, fireToast }) {
 function PhotosView({ s, update, fireToast }) {
   const fileRef = useRef(null);
   const [busy, setBusy] = useState(false);
-  const [mirror, setMirror] = useState(true);
   const all = s.photos || [];
   const lista = all.slice().reverse();
   const antes = all[0];
@@ -1363,9 +1362,7 @@ function PhotosView({ s, update, fireToast }) {
         else if (h > max) { w = Math.round(w * max / h); h = max; }
         const cv = document.createElement("canvas");
         cv.width = w; cv.height = h;
-        const ctx = cv.getContext("2d");
-        if (mirror) { ctx.translate(w, 0); ctx.scale(-1, 1); }
-        ctx.drawImage(img, 0, 0, w, h);
+        cv.getContext("2d").drawImage(img, 0, 0, w, h);
         const data = cv.toDataURL("image/jpeg", 0.55);
         const novo = { id: Date.now().toString(), date: today(), img: data };
         update(p => {
@@ -1389,15 +1386,27 @@ function PhotosView({ s, update, fireToast }) {
     update(p => ({ ...p, photos: (p.photos || []).filter(x => x.id !== id) }));
   };
 
+  const flipPhoto = (id) => {
+    const target = (s.photos || []).find(x => x.id === id);
+    if (!target) return;
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement("canvas");
+      cv.width = img.width; cv.height = img.height;
+      const ctx = cv.getContext("2d");
+      ctx.translate(img.width, 0); ctx.scale(-1, 1);
+      ctx.drawImage(img, 0, 0);
+      const data = cv.toDataURL("image/jpeg", 0.85);
+      update(p => ({ ...p, photos: (p.photos || []).map(x => x.id === id ? { ...x, img: data } : x) }));
+    };
+    img.src = target.img;
+  };
+
   return (
     <div className="space-y-5">
       <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
         Tire uma foto a cada semana, sempre no mesmo ângulo e luz. Com o tempo, você vê sua evolução de verdade.
       </p>
-      <button onClick={() => setMirror(m => !m)} className="w-full flex items-center justify-between rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${mirror ? C.gold : C.border}` }}>
-        <span className="text-sm font-semibold">↔ Corrigir espelho da selfie</span>
-        <span className="text-xs font-bold" style={{ color: mirror ? C.gold : C.muted }}>{mirror ? "LIGADO" : "DESLIGADO"}</span>
-      </button>
 
       {antes && depois ? (
         <div>
@@ -1425,6 +1434,7 @@ function PhotosView({ s, update, fireToast }) {
             {lista.map(ph => (
               <div key={ph.id} style={{ position: "relative" }}>
                 <img src={ph.img} className="w-full rounded-xl" style={{ aspectRatio: "3/4", objectFit: "cover", border: `1px solid ${C.border}` }} />
+                <button onClick={() => flipPhoto(ph.id)} aria-label="Virar" style={{ position: "absolute", top: 6, left: 6, background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer", color: "#fff", fontSize: 13, fontWeight: 700 }}>↔</button>
                 <button onClick={() => remover(ph.id)} aria-label="Apagar" style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><X size={14} style={{ color: "#fff" }} /></button>
                 <p className="text-center" style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>{ph.date}</p>
               </div>
@@ -1433,7 +1443,7 @@ function PhotosView({ s, update, fireToast }) {
         </div>
       ) : null}
 
-      <p className="text-xs" style={{ color: C.muted }}>As fotos ficam só neste aparelho (até 12). Faça backup no menu do Perfil pra não perder.</p>
+      <p className="text-xs" style={{ color: C.muted }}>As fotos ficam só neste aparelho (até 12). Se uma foto sair espelhada, toque no ↔ dela para virar.</p>
     </div>
   );
 }
