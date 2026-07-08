@@ -1344,7 +1344,7 @@ function ShareCardView({ s, fireToast }) {
 function PhotosView({ s, update, fireToast }) {
   const fileRef = useRef(null);
   const [busy, setBusy] = useState(false);
-  const [mirror, setMirror] = useState(false);
+  const [mirror, setMirror] = useState(true);
   const all = s.photos || [];
   const lista = all.slice().reverse();
   const antes = all[0];
@@ -1396,7 +1396,7 @@ function PhotosView({ s, update, fireToast }) {
         Tire uma foto a cada semana, sempre no mesmo ângulo e luz. Com o tempo, você vê sua evolução de verdade.
       </p>
       <button onClick={() => setMirror(m => !m)} className="w-full flex items-center justify-between rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${mirror ? C.gold : C.border}` }}>
-        <span className="text-sm font-semibold">↔ Espelhar foto {mirror ? "(desvira a selfie)" : ""}</span>
+        <span className="text-sm font-semibold">↔ Corrigir espelho da selfie</span>
         <span className="text-xs font-bold" style={{ color: mirror ? C.gold : C.muted }}>{mirror ? "LIGADO" : "DESLIGADO"}</span>
       </button>
 
