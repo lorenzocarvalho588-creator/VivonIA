@@ -254,138 +254,56 @@ function buildMissions(s) {
 const TREINOS = {
   masculino: [
     { group: "Peito", exercises: [
-      { name: "Supino reto com barra", sets: "4 x 10", video: null },
-      { name: "Supino inclinado com barra", sets: "4 x 10", video: null },
       { name: "Supino inclinado com halteres", sets: "3 x 12", video: "/supino%20inclinado%20com%20halteres.mp4" },
-      { name: "Supino declinado", sets: "3 x 12", video: null },
-      { name: "Crucifixo reto", sets: "3 x 15", video: null },
       { name: "Crucifixo inclinado", sets: "3 x 15", video: "/crucifixo%20inclinado%20com%20halteres.mp4" },
       { name: "Crossover na polia", sets: "3 x 15", video: "/crossover.mp4" },
       { name: "Voador (peck deck)", sets: "3 x 15", video: "/peckdeckk.mp4" },
       { name: "Supino reto articulado (máquina)", sets: "4 x 10", video: "/supino%20reto%20articulado%20na%20maquina.mp4" },
-      { name: "Pullover", sets: "3 x 12", video: null },
-      { name: "Flexão de braço", sets: "3 x até a falha", video: null },
     ]},
     { group: "Costas", exercises: [
-      { name: "Barra fixa", sets: "4 x máx", video: null },
-      { name: "Puxada frontal", sets: "4 x 10", video: null },
-      { name: "Puxada atrás da nuca", sets: "3 x 12", video: null },
-      { name: "Pulldown na polia", sets: "3 x 12", video: null },
-      { name: "Remada curvada", sets: "4 x 10", video: null },
-      { name: "Remada baixa", sets: "3 x 12", video: null },
-      { name: "Remada cavalinho", sets: "3 x 12", video: null },
       { name: "Remada articulada (máquina)", sets: "4 x 10", video: "/remada%20articuladaa.mp4" },
-      { name: "Remada unilateral (serrote)", sets: "3 x 12", video: null },
-      { name: "Levantamento terra", sets: "4 x 8", video: null },
-      { name: "Encolhimento (trapézio)", sets: "3 x 15", video: null },
+      { name: "Puxada frontal", sets: "4 x 12", video: "/puxada-frontal.mp4" },
+      { name: "Remada baixa", sets: "3 x 12", video: "/remada-articulada-pronada.mp4" },
+      { name: "Remada curvada", sets: "3 x 12", video: null },
+      { name: "Barra fixa", sets: "3 x 10", video: null },
     ]},
     { group: "Pernas", exercises: [
-      { name: "Agachamento livre", sets: "4 x 10", video: null },
-      { name: "Agachamento no Smith", sets: "3 x 12", video: null },
+      { name: "Agachamento livre", sets: "4 x 12", video: null },
       { name: "Leg press 45°", sets: "4 x 12", video: null },
-      { name: "Hack squat", sets: "3 x 12", video: null },
       { name: "Cadeira extensora", sets: "3 x 15", video: null },
-      { name: "Mesa flexora", sets: "3 x 12", video: null },
-      { name: "Cadeira flexora", sets: "3 x 15", video: null },
-      { name: "Afundo com halteres", sets: "3 x 12 (cada perna)", video: null },
-      { name: "Stiff", sets: "3 x 12", video: null },
+      { name: "Mesa flexora", sets: "3 x 15", video: "/mesa-flexora.mp4" },
       { name: "Panturrilha em pé", sets: "4 x 20", video: null },
-      { name: "Panturrilha sentado", sets: "4 x 20", video: null },
     ]},
     { group: "Ombros", exercises: [
-      { name: "Desenvolvimento militar", sets: "4 x 10", video: null },
       { name: "Desenvolvimento com halteres", sets: "3 x 12", video: "/desenvolovimento%20com%20halteres.mp4" },
-      { name: "Desenvolvimento Arnold", sets: "3 x 12", video: null },
       { name: "Elevação lateral", sets: "3 x 15", video: "/elevacao%20lateral%20com%20halteres.mp4" },
       { name: "Elevação frontal", sets: "3 x 12", video: "/elevacao%20frontal%20com%20halteres.mp4" },
-      { name: "Remada alta", sets: "3 x 12", video: null },
       { name: "Crucifixo invertido", sets: "3 x 15", video: "/crucifixo%20invertido%20na%20maquina.mp4" },
       { name: "Desenvolvimento articulado (máquina)", sets: "4 x 10", video: "/desenvolvimento%20articulado%20na%20maquinaa.mp4" },
       { name: "Crucifixo invertido sentado", sets: "3 x 15", video: "/crucifixo%20invertido%20sdentado%20com%20halteres.mp4" },
-      { name: "Face pull", sets: "3 x 15", video: null },
-      { name: "Encolhimento", sets: "3 x 15", video: null },
     ]},
     { group: "Bíceps", exercises: [
       { name: "Rosca direta", sets: "3 x 12", video: "/rosca%20direta%20com%20halteres.mp4" },
-      { name: "Rosca alternada", sets: "3 x 12", video: null },
       { name: "Rosca martelo", sets: "3 x 12", video: "/rosca%20martelo%20com%20halteres.mp4" },
       { name: "Rosca scott", sets: "3 x 12", video: "/biceps%20na%20maquina%20scott.mp4" },
-      { name: "Rosca concentrada", sets: "3 x 12", video: null },
-      { name: "Rosca inversa", sets: "3 x 12", video: null },
-      { name: "Rosca na polia", sets: "3 x 15", video: null },
-      { name: "Rosca 21", sets: "3 séries", video: null },
     ]},
     { group: "Tríceps", exercises: [
-      { name: "Tríceps testa", sets: "3 x 12", video: "/triceps%20testa%20com%20halteres.mp4" },
-      { name: "Tríceps corda", sets: "3 x 15", video: null },
-      { name: "Tríceps barra na polia", sets: "3 x 12", video: null },
       { name: "Tríceps francês", sets: "3 x 12", video: "/triceps%20frances%20com%20halteres.mp4" },
-      { name: "Tríceps coice", sets: "3 x 12", video: null },
-      { name: "Mergulho no banco", sets: "3 x 15", video: null },
-      { name: "Mergulho nas paralelas", sets: "3 x máx", video: null },
-      { name: "Supino fechado", sets: "3 x 12", video: null },
+      { name: "Tríceps testa", sets: "3 x 12", video: "/triceps%20testa%20com%20halteres.mp4" },
     ]},
     { group: "Abdômen", exercises: [
       { name: "Abdominal supra", sets: "3 x 20", video: null },
-      { name: "Abdominal infra", sets: "3 x 15", video: null },
-      { name: "Abdominal oblíquo", sets: "3 x 20", video: null },
       { name: "Prancha", sets: "3 x 40s", video: null },
-      { name: "Prancha lateral", sets: "3 x 30s", video: null },
       { name: "Elevação de pernas", sets: "3 x 15", video: null },
-      { name: "Bicicleta", sets: "3 x 20", video: null },
-      { name: "Roda abdominal", sets: "3 x 12", video: null },
     ]},
   ],
   feminino: [
     { group: "Glúteos", exercises: [
-      { name: "Hip thrust", sets: "4 x 12", video: null },
-      { name: "Elevação pélvica no solo", sets: "4 x 15", video: null },
+      { name: "Hip thrust", sets: "4 x 12", video: "/hip-thrust.mp4" },
       { name: "Agachamento sumô", sets: "4 x 12", video: null },
       { name: "Coice na polia", sets: "3 x 15", video: null },
-      { name: "Coice no solo (kickback)", sets: "3 x 20", video: null },
       { name: "Abdução na máquina", sets: "3 x 20", video: null },
-      { name: "Abdução em pé na polia", sets: "3 x 15", video: null },
-      { name: "Avanço (passada)", sets: "3 x 12 (cada perna)", video: null },
       { name: "Stiff", sets: "3 x 12", video: null },
-      { name: "Agachamento búlgaro", sets: "3 x 12", video: null },
-    ]},
-    { group: "Quadríceps", exercises: [
-      { name: "Agachamento", sets: "4 x 12", video: null },
-      { name: "Agachamento no Smith", sets: "3 x 12", video: null },
-      { name: "Leg press 45°", sets: "4 x 12", video: null },
-      { name: "Hack squat", sets: "3 x 12", video: null },
-      { name: "Cadeira extensora", sets: "3 x 15", video: null },
-      { name: "Afundo", sets: "3 x 12 (cada perna)", video: null },
-      { name: "Avanço com halteres", sets: "3 x 12", video: null },
-      { name: "Agachamento búlgaro", sets: "3 x 12", video: null },
-    ]},
-    { group: "Posterior de coxa", exercises: [
-      { name: "Stiff", sets: "4 x 12", video: null },
-      { name: "Levantamento terra romeno", sets: "3 x 10", video: null },
-      { name: "Mesa flexora", sets: "3 x 15", video: null },
-      { name: "Cadeira flexora", sets: "3 x 15", video: null },
-      { name: "Flexora em pé", sets: "3 x 15", video: null },
-      { name: "Bom dia", sets: "3 x 12", video: null },
-    ]},
-    { group: "Abdômen", exercises: [
-      { name: "Abdominal supra", sets: "3 x 20", video: null },
-      { name: "Abdominal infra", sets: "3 x 15", video: null },
-      { name: "Abdominal oblíquo", sets: "3 x 20", video: null },
-      { name: "Prancha", sets: "3 x 40s", video: null },
-      { name: "Prancha lateral", sets: "3 x 30s", video: null },
-      { name: "Elevação de pernas", sets: "3 x 15", video: null },
-      { name: "Bicicleta no solo", sets: "3 x 20", video: null },
-      { name: "Canivete", sets: "3 x 15", video: null },
-    ]},
-    { group: "Costas", exercises: [
-      { name: "Puxada frontal", sets: "4 x 12", video: null },
-      { name: "Puxada aberta", sets: "3 x 12", video: null },
-      { name: "Remada baixa", sets: "3 x 12", video: null },
-      { name: "Remada curvada", sets: "3 x 12", video: null },
-      { name: "Remada unilateral", sets: "3 x 12", video: null },
-      { name: "Pulldown", sets: "3 x 15", video: null },
-      { name: "Barra assistida", sets: "3 x 10", video: null },
-      { name: "Encolhimento", sets: "3 x 15", video: null },
     ]},
     { group: "Ombros e Braços", exercises: [
       { name: "Desenvolvimento com halteres", sets: "3 x 12", video: "/desenvolovimento%20com%20halteres.mp4" },
@@ -393,19 +311,12 @@ const TREINOS = {
       { name: "Elevação frontal", sets: "3 x 12", video: "/elevacao%20frontal%20com%20halteres.mp4" },
       { name: "Crucifixo invertido", sets: "3 x 15", video: "/crucifixo%20invertido%20na%20maquina.mp4" },
       { name: "Rosca direta", sets: "3 x 15", video: "/rosca%20direta%20com%20halteres.mp4" },
-      { name: "Rosca alternada", sets: "3 x 12", video: null },
-      { name: "Tríceps corda", sets: "3 x 15", video: null },
       { name: "Tríceps testa", sets: "3 x 12", video: "/triceps%20testa%20com%20halteres.mp4" },
     ]},
-    { group: "Cardio / Funcional", exercises: [
-      { name: "Burpee", sets: "4 x 12", video: null },
-      { name: "Polichinelo", sets: "4 x 30s", video: null },
-      { name: "Mountain climber", sets: "4 x 30s", video: null },
-      { name: "Escalador", sets: "4 x 30s", video: null },
-      { name: "Agachamento com salto", sets: "4 x 15", video: null },
-      { name: "Afundo com salto", sets: "4 x 12", video: null },
-      { name: "Prancha com toque no ombro", sets: "3 x 20", video: null },
-      { name: "Corrida estacionária", sets: "4 x 40s", video: null },
+    { group: "Abdômen", exercises: [
+      { name: "Abdominal supra", sets: "3 x 20", video: null },
+      { name: "Prancha", sets: "3 x 40s", video: null },
+      { name: "Elevação de pernas", sets: "3 x 15", video: null },
     ]},
   ],
 };
@@ -576,7 +487,6 @@ function VivonApp() {
           {s.tab === "treinos" && <TreinosTab update={update} award={award} fireToast={fireToast} />}
           {s.tab === "dash" && <DashboardTab s={s} setS={setS} />}
           {s.tab === "ai" && <AITab s={s} setS={setS} award={award} />}
-          {s.tab === "photos" && <div className="px-5 pt-6"><div className="mb-5"><h1 className="text-2xl font-bold">Progresso</h1><p className="text-sm" style={{ color: C.muted }}>Seu antes e depois — registre sua evolução</p></div><PhotosView s={s} update={update} fireToast={fireToast} /></div>}
           {s.tab === "profile" && <ProfileTab s={s} update={update} award={award} fireToast={fireToast} />}
         </div>
         <Nav tab={s.tab} setTab={(t) => update({ tab: t })} />
@@ -908,7 +818,7 @@ function ExerciseRow({ ex, gender }) {
       <div className="px-3 pt-2.5 pb-2"><p className="font-medium text-sm">{ex.name}</p><p className="text-xs" style={{ color: C.muted }}>{ex.sets}</p></div>
       <div className="px-3 pb-3">
         {ex.video ? (
-          <video src={ex.video} controls loop playsInline preload="metadata" className="w-full rounded-lg" style={{ aspectRatio: "9/16", maxHeight: 420, objectFit: "cover", background: "#000" }} />
+          <video src={ex.video} controls playsInline className="w-full rounded-lg" style={{ aspectRatio: "16/9", background: "#000" }} />
         ) : (
           <div className="w-full rounded-lg flex flex-col items-center justify-center gap-1.5" style={{ aspectRatio: "16/9", background: "#000", border: `1.5px dashed ${C.border}` }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill={C.gold}><path d="M8 5v14l11-7z" /></svg>
@@ -1100,6 +1010,8 @@ function ProfileTab({ s, update, award, fireToast }) {
   const g = GOALS.find(x => x.k === s.profile.goal);
   const items = [
     { k: "edit", t: "Editar perfil", icon: User, sub: "Nome, objetivo e dados" },
+    { k: "backup", t: "Backup dos meus dados", icon: Copy, sub: "Exportar e importar" },
+    { k: "photos", t: "Fotos de progresso", icon: Activity, sub: "Seu antes e depois" },
     { k: "share", t: "Compartilhar evolução", icon: Sparkles, sub: "Imagem pro Instagram" },
     { k: "week", t: "Resumo da semana", icon: BarChart3, sub: "Seus últimos 7 dias" },
     { k: "weight", t: "Histórico de peso", icon: Scale, sub: "Gráfico de evolução" },
@@ -1108,7 +1020,6 @@ function ProfileTab({ s, update, award, fireToast }) {
     { k: "levels", t: "Níveis & Recompensas", icon: Crown, sub: `Nível ${li.level}` },
     { k: "challenges", t: "Desafios", icon: Rocket, sub: s.challenge ? "Em andamento" : "Começar" },
     { k: "library", t: "Biblioteca Premium", icon: BookOpen, sub: "5 categorias" },
-    { k: "backup", t: "Backup dos meus dados", icon: Copy, sub: "Exportar e importar" },
   ];
   const reset = () => { if (confirm("Isso vai apagar todo o seu progresso. Tem certeza?")) { try { localStorage.setItem("vivon-state", JSON.stringify(DEFAULT)); } catch {} update(() => ({ ...DEFAULT })); } };
 
@@ -1386,22 +1297,6 @@ function PhotosView({ s, update, fireToast }) {
     update(p => ({ ...p, photos: (p.photos || []).filter(x => x.id !== id) }));
   };
 
-  const flipPhoto = (id) => {
-    const target = (s.photos || []).find(x => x.id === id);
-    if (!target) return;
-    const img = new Image();
-    img.onload = () => {
-      const cv = document.createElement("canvas");
-      cv.width = img.width; cv.height = img.height;
-      const ctx = cv.getContext("2d");
-      ctx.translate(img.width, 0); ctx.scale(-1, 1);
-      ctx.drawImage(img, 0, 0);
-      const data = cv.toDataURL("image/jpeg", 0.85);
-      update(p => ({ ...p, photos: (p.photos || []).map(x => x.id === id ? { ...x, img: data } : x) }));
-    };
-    img.src = target.img;
-  };
-
   return (
     <div className="space-y-5">
       <p className="text-sm leading-relaxed" style={{ color: C.muted }}>
@@ -1434,7 +1329,6 @@ function PhotosView({ s, update, fireToast }) {
             {lista.map(ph => (
               <div key={ph.id} style={{ position: "relative" }}>
                 <img src={ph.img} className="w-full rounded-xl" style={{ aspectRatio: "3/4", objectFit: "cover", border: `1px solid ${C.border}` }} />
-                <button onClick={() => flipPhoto(ph.id)} aria-label="Virar" style={{ position: "absolute", top: 6, left: 6, background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer", color: "#fff", fontSize: 13, fontWeight: 700 }}>↔</button>
                 <button onClick={() => remover(ph.id)} aria-label="Apagar" style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }}><X size={14} style={{ color: "#fff" }} /></button>
                 <p className="text-center" style={{ fontSize: 10, color: C.muted, marginTop: 3 }}>{ph.date}</p>
               </div>
@@ -1443,7 +1337,7 @@ function PhotosView({ s, update, fireToast }) {
         </div>
       ) : null}
 
-      <p className="text-xs" style={{ color: C.muted }}>As fotos ficam só neste aparelho (até 12). Se uma foto sair espelhada, toque no ↔ dela para virar.</p>
+      <p className="text-xs" style={{ color: C.muted }}>As fotos ficam só neste aparelho (até 12). Faça backup no menu do Perfil pra não perder.</p>
     </div>
   );
 }
@@ -1535,100 +1429,22 @@ function Panel({ title, onBack, children }) { return (<div className="px-5 pt-6"
 function Achievements({ s }) { return (<div className="grid grid-cols-2 gap-3">{ACHV.map(a => { const got = s.achievements.includes(a.id); return (<div key={a.id} className="rounded-2xl p-3.5 flex flex-col gap-1.5" style={{ background: a.rare ? "linear-gradient(135deg, rgba(212,175,55,0.14), rgba(20,20,20,1))" : C.card, border: `1px solid ${got ? C.gold : C.border}`, opacity: got ? 1 : 0.4 }}><div className="flex items-center justify-between"><a.icon size={20} style={{ color: got ? C.gold : C.muted }} />{a.rare && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(212,175,55,0.2)", color: C.gold }}>RARA</span>}</div><span className="font-semibold text-sm">{a.name}</span><span className="text-[11px]" style={{ color: C.muted }}>{a.desc}</span></div>); })}</div>); }
 function LevelsView({ s }) { const li = levelInfo(s.xp); return (<div className="space-y-3"><Card className="text-center"><p className="text-sm" style={{ color: C.muted }}>Seu nível</p><p className="text-4xl font-bold" style={{ color: C.gold }}>{li.level}<span className="text-lg" style={{ color: C.muted }}>/100</span></p><div className="h-2 rounded-full overflow-hidden mt-3" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${li.pct}%`, background: C.gold }} /></div><p className="text-xs mt-2" style={{ color: C.muted }}>{li.current}/{li.need} XP para o próximo</p></Card><div className="space-y-2">{LEVEL_REWARDS.map(r => { const got = li.level >= r.lvl; return (<div key={r.lvl} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${got ? C.gold : C.border}`, opacity: got ? 1 : 0.55 }}><div className="rounded-lg p-2" style={{ background: got ? "rgba(212,175,55,0.15)" : C.cardL }}>{got ? <r.icon size={18} style={{ color: C.gold }} /> : <Lock size={18} style={{ color: C.muted }} />}</div><div className="flex-1"><p className="font-semibold text-sm">{r.t}</p><p className="text-xs" style={{ color: C.muted }}>Nível {r.lvl}</p></div>{got && <Check size={16} style={{ color: C.gold }} />}</div>); })}</div></div>); }
 function ChallengesView({ s, update }) { const start = (k) => update({ challenge: { k, start: today(), done: [] } }); return (<div className="space-y-3">{s.challenge && <ChallengeCard s={s} update={update} />}{!s.challenge && CHALLENGES.map(c => (<button key={c.k} onClick={() => start(c.k)} className="w-full text-left rounded-2xl p-4" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="flex items-center justify-between mb-1"><span className="font-bold flex items-center gap-2"><Rocket size={17} style={{ color: C.gold }} />{c.t}</span><span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(212,175,55,0.15)", color: C.gold }}>{c.days} dias</span></div><p className="text-sm" style={{ color: C.muted }}>{c.desc}</p></button>))}{s.challenge && <p className="text-xs text-center" style={{ color: C.muted }}>Conclua o desafio atual para iniciar outro.</p>}</div>); }
-function LibraryView({ s, fireToast }) {
-  const cats = Object.keys(LIBRARY);
-  const [cat, setCat] = useState(cats[0]);
-  const [open, setOpen] = useState(null);
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [cache, setCache] = useState({});
-  const li = levelInfo(s.xp);
-
-  const read = async (it) => {
-    setOpen(it);
-    if (cache[it.t]) { setText(cache[it.t]); setLoading(false); return; }
-    setText(""); setLoading(true);
-    try {
-      const res = await fetch(AI_ENDPOINT, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          max_tokens: 1000,
-          system: "Você é um mentor do VIVON. Escreva um guia prático e direto em português do Brasil sobre o tema pedido, para quem quer evoluir corpo e mente. Linguagem motivadora, sem enrolação. Estrutura: um parágrafo de abertura, de 3 a 5 pontos práticos aplicáveis hoje, e uma frase final de ação. Texto limpo, sem markdown pesado.",
-          messages: [{ role: "user", content: `Escreva o guia "${it.t}" (categoria ${cat}), para ${s.profile.name || "o usuário"}.` }]
-        })
-      });
-      const d = await res.json();
-      const txt = (d.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim() || "Não consegui gerar agora. Tenta de novo.";
-      setText(txt);
-      setCache(c => ({ ...c, [it.t]: txt }));
-    } catch { setText("Não consegui conectar com a IA agora. Tenta de novo em instantes."); }
-    finally { setLoading(false); }
-  };
-
-  if (open) {
-    return (
-      <div>
-        <button onClick={() => setOpen(null)} className="flex items-center gap-2 mb-4 text-sm font-semibold" style={{ color: C.gold }}><ChevronLeft size={16} /> Voltar à biblioteca</button>
-        <h2 className="text-lg font-bold mb-1">{open.t}</h2>
-        <p className="text-xs mb-4" style={{ color: C.muted }}>{cat} · {open.d} de leitura</p>
-        {loading ? (
-          <div className="flex items-center gap-2 text-sm py-6" style={{ color: C.muted }}><Sparkles size={16} style={{ color: C.gold }} /> Gerando seu guia com a IA...</div>
-        ) : (
-          <div className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: "#E0E0E0" }}>{text}</div>
-        )}
-        {!loading && (() => {
-          const relacionados = LIBRARY[cat].filter(x => x.t !== open.t && li.level >= x.lvl).slice(0, 3);
-          if (relacionados.length === 0) return null;
-          return (
-            <div className="mt-7 pt-5" style={{ borderTop: `1px solid ${C.border}` }}>
-              <p className="text-xs font-bold mb-3" style={{ color: C.gold, letterSpacing: ".12em" }}>CONTINUE LENDO</p>
-              <div className="space-y-2.5">{relacionados.map((r, i) => (
-                <button key={i} onClick={() => read(r)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-                  <div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}><BookOpen size={16} style={{ color: C.gold }} /></div>
-                  <div className="flex-1 text-left"><p className="font-semibold text-sm">{r.t}</p><p className="text-xs" style={{ color: C.muted }}>{r.d} de leitura</p></div>
-                  <ChevronRight size={16} style={{ color: C.muted }} />
-                </button>
-              ))}</div>
-            </div>
-          );
-        })()}
-        <div className="h-6" />
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="flex gap-2 overflow-x-auto pb-3">{cats.map(c => <button key={c} onClick={() => setCat(c)} className="px-3.5 py-2 rounded-full whitespace-nowrap text-sm font-semibold" style={{ background: cat === c ? C.gold : C.card, color: cat === c ? "#000" : C.white, border: `1px solid ${cat === c ? C.gold : C.border}` }}>{c}</button>)}</div>
-      <div className="space-y-2.5">{LIBRARY[cat].map((it, i) => { const locked = li.level < it.lvl; return (<button key={i} onClick={() => locked ? fireToast(`🔒 Desbloqueia no nível ${it.lvl}`) : read(it)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: C.card, border: `1px solid ${C.border}`, opacity: locked ? 0.55 : 1 }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}>{locked ? <Lock size={16} style={{ color: C.muted }} /> : <BookOpen size={16} style={{ color: C.gold }} />}</div><div className="flex-1 text-left"><p className="font-semibold text-sm">{it.t}</p><p className="text-xs" style={{ color: C.muted }}>{locked ? `Nível ${it.lvl}` : it.d}</p></div>{!locked && <ChevronRight size={16} style={{ color: C.muted }} />}</button>); })}</div>
-    </div>
-  );
-}
+function LibraryView({ s, fireToast }) { const cats = Object.keys(LIBRARY); const [cat, setCat] = useState(cats[0]); const li = levelInfo(s.xp); return (<div><div className="flex gap-2 overflow-x-auto pb-3">{cats.map(c => <button key={c} onClick={() => setCat(c)} className="px-3.5 py-2 rounded-full whitespace-nowrap text-sm font-semibold" style={{ background: cat === c ? C.gold : C.card, color: cat === c ? "#000" : C.white, border: `1px solid ${cat === c ? C.gold : C.border}` }}>{c}</button>)}</div><div className="space-y-2.5">{LIBRARY[cat].map((it, i) => { const locked = li.level < it.lvl; return (<button key={i} onClick={() => fireToast(locked ? `🔒 Desbloqueia no nível ${it.lvl}` : "▶ Conteúdo em breve")} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: C.card, border: `1px solid ${C.border}`, opacity: locked ? 0.55 : 1 }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}>{locked ? <Lock size={16} style={{ color: C.muted }} /> : <BookOpen size={16} style={{ color: C.gold }} />}</div><div className="flex-1 text-left"><p className="font-semibold text-sm">{it.t}</p><p className="text-xs" style={{ color: C.muted }}>{locked ? `Nível ${it.lvl}` : it.d}</p></div>{!locked && <ChevronRight size={16} style={{ color: C.muted }} />}</button>); })}</div></div>); }
 function ReferralView({ s, fireToast }) { const code = "VIVON-" + (s.profile.name || "VOCE").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6); const copy = () => { try { navigator.clipboard.writeText(code); fireToast("Código copiado!"); } catch { fireToast(code); } }; const tiers = [{ n: 1, r: "7 dias grátis", icon: Star }, { n: 3, r: "1 mês grátis", icon: Medal }, { n: 5, r: "Tema exclusivo Ouro", icon: Crown }]; return (<div className="space-y-4"><Card className="text-center" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(20,20,20,1))" }}><Gift size={28} style={{ color: C.gold }} className="mx-auto mb-2" /><p className="text-sm" style={{ color: C.muted }}>Seu código de indicação</p><p className="text-2xl font-bold tracking-wider my-2" style={{ color: C.gold }}>{code}</p><button onClick={copy} className="rounded-xl px-5 py-2.5 text-sm font-bold inline-flex items-center gap-2" style={{ background: C.gold, color: "#000" }}><Copy size={15} />Copiar código</button></Card><p className="text-sm font-semibold">Cada amigo que assinar te dá:</p><div className="space-y-2.5">{tiers.map(t => (<div key={t.n} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}><t.icon size={18} style={{ color: C.gold }} /></div><div className="flex-1"><p className="font-semibold text-sm">{t.r}</p><p className="text-xs" style={{ color: C.muted }}>Com {t.n} {t.n === 1 ? "indicação" : "indicações"}</p></div></div>))}</div><p className="text-xs text-center" style={{ color: C.muted }}>Indicações ativas: 0 · conecte ao backend para rastrear automaticamente.</p></div>); }
 
 function Nav({ tab, setTab }) {
-  const left = [
+  const items = [
     { k: "home", icon: Home, l: "Início" },
+    { k: "track", icon: Zap, l: "Evoluir" },
     { k: "treinos", icon: Dumbbell, l: "Treinos" },
-    { k: "dash", icon: TrendingUp, l: "Evolução" },
-  ];
-  const right = [
-    { k: "photos", icon: Activity, l: "Progresso" },
+    { k: "dash", icon: BarChart3, l: "Painel" },
     { k: "ai", icon: Brain, l: "IA" },
     { k: "profile", icon: User, l: "Perfil" },
   ];
-  const btn = (it) => { const active = tab === it.k; return (<button key={it.k} onClick={() => setTab(it.k)} className="flex flex-col items-center gap-1 py-1" style={{ flex: 1 }}><it.icon size={20} style={{ color: active ? C.gold : C.muted }} /><span className="text-[9px] font-medium" style={{ color: active ? C.gold : C.muted }}>{it.l}</span></button>); };
   return (
     <div className="fixed bottom-0 left-1/2 w-full" style={{ maxWidth: 440, transform: "translateX(-50%)", background: "rgba(10,10,10,0.92)", backdropFilter: "blur(12px)", borderTop: `1px solid ${C.border}` }}>
-      <div className="flex items-end justify-around px-1 py-2.5">
-        {left.map(btn)}
-        <button onClick={() => setTab("track")} className="flex flex-col items-center" style={{ flex: 1 }}>
-          <div style={{ width: 52, height: 52, borderRadius: "50%", background: `linear-gradient(180deg, #EBCB6E, ${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 20px rgba(212,175,55,0.45)", border: "3px solid #0A0A0A", marginTop: -24 }}>
-            <Zap size={24} style={{ color: "#000" }} />
-          </div>
-          <span className="text-[9px] font-bold mt-1" style={{ color: C.gold }}>Meu dia</span>
-        </button>
-        {right.map(btn)}
+      <div className="flex items-center justify-around px-1 py-2.5">
+        {items.map(it => { const active = tab === it.k; return (<button key={it.k} onClick={() => setTab(it.k)} className="flex flex-col items-center gap-1 px-1 py-1"><it.icon size={20} style={{ color: active ? C.gold : C.muted }} /><span className="text-[9px] font-medium" style={{ color: active ? C.gold : C.muted }}>{it.l}</span></button>); })}
       </div>
     </div>
   );
