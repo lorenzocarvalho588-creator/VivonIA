@@ -348,6 +348,8 @@ const DEFAULT = {
   analysis: null,
   notif: { on: false, last: "" },
   weeklyGoals: { week: "", ids: [] },
+  metasDia: { date: "", ids: [] },
+  metasSemana: { week: "", ids: [] },
 };
 
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
@@ -375,6 +377,109 @@ function AccessGate({ onUnlock }) {
         {err ? <p style={{ color: "#E0533B", fontSize: 13, marginBottom: 12 }}>Senha inválida. Confira o e-mail da sua compra.</p> : null}
         <button onClick={tryUnlock} className="w-full rounded-2xl py-4 font-bold" style={{ background: `linear-gradient(180deg, #EBCB6E, ${C.gold})`, color: "#000", border: "none", cursor: "pointer", fontSize: 16 }}>Entrar</button>
         <p style={{ color: C.muted, fontSize: 12, marginTop: 20 }}>Ainda não tem acesso? Assine o VIVON para receber sua senha.</p>
+      </div>
+    </div>
+  );
+}
+const META_DIA = [
+  { id: "d_treino", t: "Treinar ou me movimentar", icon: Dumbbell, xp: 10 },
+  { id: "d_agua", t: "Beber bastante água", icon: Droplet, xp: 10 },
+  { id: "d_mente", t: "Cuidar da mente (ler, orar, meditar)", icon: Brain, xp: 10 },
+  { id: "d_plano", t: "Planejar o meu dia", icon: ClipboardCheck, xp: 10 },
+];
+const META_AREAS = [
+  { area: "Físico", emoji: "💪", goals: [
+    { id: "f_treino4", t: "Treinar 4x nesta semana", xp: 40 },
+    { id: "f_sono", t: "Dormir bem (7h+)", xp: 20 },
+    { id: "f_alim", t: "Manter a alimentação limpa", xp: 20 },
+  ]},
+  { area: "Mentalidade", emoji: "🧠", goals: [
+    { id: "m_ler", t: "Ler ou estudar", xp: 20 },
+    { id: "m_grat", t: "Praticar gratidão", xp: 15 },
+    { id: "m_medit", t: "Meditar ou orar", xp: 15 },
+  ]},
+  { area: "Disciplina", emoji: "🎯", goals: [
+    { id: "di_cedo", t: "Acordar cedo", xp: 20 },
+    { id: "di_rotina", t: "Cumprir a minha rotina", xp: 20 },
+    { id: "di_proc", t: "Não procrastinar", xp: 20 },
+  ]},
+  { area: "Financeiro", emoji: "💰", goals: [
+    { id: "fi_impulso", t: "Não gastar por impulso", xp: 20 },
+    { id: "fi_guardar", t: "Guardar dinheiro", xp: 25 },
+    { id: "fi_revisar", t: "Revisar os meus gastos", xp: 15 },
+  ]},
+  { area: "Produtividade", emoji: "⚡", goals: [
+    { id: "p_foco", t: "Foco no trabalho / estudo", xp: 20 },
+    { id: "p_tarefas", t: "Concluir as minhas tarefas", xp: 20 },
+    { id: "p_redes", t: "Menos redes sociais", xp: 15 },
+  ]},
+];
+function MetasTab({ s, update, award }) {
+  const t = today();
+  const wk = weekKey();
+  const diaDone = (s.metasDia && s.metasDia.date === t) ? s.metasDia.ids : [];
+  const semDone = (s.metasSemana && s.metasSemana.week === wk) ? s.metasSemana.ids : [];
+
+  const marcarDia = (id, xp) => {
+    if (diaDone.includes(id)) return;
+    update(p => { const cur = (p.metasDia && p.metasDia.date === t) ? p.metasDia.ids : []; return { ...p, metasDia: { date: t, ids: [...cur, id] } }; });
+    award(xp);
+  };
+  const marcarSem = (id, xp) => {
+    if (semDone.includes(id)) return;
+    update(p => { const cur = (p.metasSemana && p.metasSemana.week === wk) ? p.metasSemana.ids : []; return { ...p, metasSemana: { week: wk, ids: [...cur, id] } }; });
+    award(xp);
+  };
+
+  return (
+    <div className="px-5 pt-6 pb-28" style={{ maxWidth: 440, margin: "0 auto" }}>
+      <h1 className="text-2xl font-bold mb-1">Metas</h1>
+      <p className="text-sm mb-5" style={{ color: C.muted }}>Evolua em todas as áreas da sua vida.</p>
+
+      <div className="rounded-2xl p-4 mb-6" style={{ background: `linear-gradient(180deg, rgba(212,175,55,0.10), ${C.card})`, border: `1px solid ${C.gold}` }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-bold flex items-center gap-2"><Sparkles size={17} style={{ color: C.gold }} /> Meta do dia</p>
+          <span className="text-xs font-bold" style={{ color: C.gold }}>{diaDone.length}/{META_DIA.length}</span>
+        </div>
+        <div className="flex flex-col gap-2">
+          {META_DIA.map(g => {
+            const done = diaDone.includes(g.id);
+            return (
+              <button key={g.id} onClick={() => marcarDia(g.id, g.xp)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left" style={{ background: done ? "rgba(212,175,55,0.12)" : C.cardL, border: `1px solid ${done ? C.gold : "transparent"}`, cursor: "pointer" }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", border: `1.5px solid ${done ? C.gold : C.muted}`, background: done ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{done ? <Check size={14} style={{ color: "#000" }} /> : null}</div>
+                <g.icon size={16} style={{ color: C.gold }} />
+                <span className="text-sm flex-1" style={{ color: done ? C.muted : C.white, textDecoration: done ? "line-through" : "none" }}>{g.t}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="text-xs font-bold mb-3" style={{ color: C.muted, letterSpacing: ".1em" }}>METAS DA SEMANA · RENOVAM SEGUNDA</p>
+      <div className="flex flex-col gap-4">
+        {META_AREAS.map(a => {
+          const feitas = a.goals.filter(g => semDone.includes(g.id)).length;
+          return (
+            <div key={a.area} className="rounded-2xl p-4" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+              <div className="flex items-center justify-between mb-3">
+                <p className="font-bold flex items-center gap-2"><span style={{ fontSize: 18 }}>{a.emoji}</span> {a.area}</p>
+                <span className="text-xs font-bold" style={{ color: C.gold }}>{feitas}/{a.goals.length}</span>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                {a.goals.map(g => {
+                  const done = semDone.includes(g.id);
+                  return (
+                    <button key={g.id} onClick={() => marcarSem(g.id, g.xp)} className="flex items-center gap-3 text-left" style={{ cursor: "pointer" }}>
+                      <div style={{ width: 20, height: 20, borderRadius: "50%", border: `1.5px solid ${done ? C.gold : C.muted}`, background: done ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{done ? <Check size={13} style={{ color: "#000" }} /> : null}</div>
+                      <span className="text-sm flex-1" style={{ color: done ? C.muted : C.white, textDecoration: done ? "line-through" : "none" }}>{g.t}</span>
+                      {!done ? <span className="text-xs font-bold" style={{ color: C.gold }}>+{g.xp}</span> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -499,6 +604,7 @@ function VivonApp() {
           {s.tab === "dash" && <DashboardTab s={s} setS={setS} />}
           {s.tab === "ai" && <AITab s={s} setS={setS} award={award} />}
           {s.tab === "profile" && <ProfileTab s={s} update={update} award={award} fireToast={fireToast} />}
+          {s.tab === "metas" && <MetasTab s={s} update={update} award={award} />}
         </div>
         <Nav tab={s.tab} setTab={(t) => update({ tab: t })} />
       </div>
@@ -1026,7 +1132,6 @@ function ProfileTab({ s, update, award, fireToast }) {
     { k: "share", t: "Compartilhar evolução", icon: Sparkles, sub: "Imagem pro Instagram" },
     { k: "week", t: "Resumo da semana", icon: BarChart3, sub: "Seus últimos 7 dias" },
     { k: "weight", t: "Histórico de peso", icon: Scale, sub: "Gráfico de evolução" },
-    { k: "goals", t: "Metas da semana", icon: Target, sub: "Renovam toda segunda" },
     { k: "achievements", t: "Conquistas", icon: Award, sub: `${s.achievements.length}/${ACHV.length}` },
     { k: "levels", t: "Níveis & Recompensas", icon: Crown, sub: `Nível ${li.level}` },
     { k: "challenges", t: "Desafios", icon: Rocket, sub: s.challenge ? "Em andamento" : "Começar" },
@@ -1450,6 +1555,7 @@ function Nav({ tab, setTab }) {
     { k: "dash", icon: BarChart3, l: "Painel" },
   ];
   const right = [
+    { k: "metas", icon: Target, l: "Metas" },
     { k: "ai", icon: Brain, l: "IA" },
     { k: "profile", icon: User, l: "Perfil" },
   ];
