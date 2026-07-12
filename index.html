@@ -357,7 +357,7 @@ const DEFAULT = {
   notif: { on: false, last: "" },
   weeklyGoals: { week: "", ids: [] },
   metasDia: { date: "", ids: [] },
-  metasSemana: { week: "", ids: [] },
+  metasSemana: { week: "", ids: [], bonus: [] },
 };
 
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
@@ -396,6 +396,12 @@ const META_DIA = [
   { id: "d_plano", t: "Planejar o meu dia", icon: ClipboardCheck, xp: 10 },
 ];
 const META_AREAS = [
+  { area: "Fé", emoji: "✝️", goals: [
+    { id: "fe_orar", t: "Orar todos os dias", xp: 20 },
+    { id: "fe_biblia", t: "Ler a Bíblia / a Palavra", xp: 20 },
+    { id: "fe_igreja", t: "Ir à igreja ou célula", xp: 25 },
+    { id: "fe_grat", t: "Agradecer a Deus", xp: 15 },
+  ]},
   { area: "Físico", emoji: "💪", goals: [
     { id: "f_treino4", t: "Treinar 4x nesta semana", xp: 40 },
     { id: "f_sono", t: "Dormir bem (7h+)", xp: 20 },
@@ -422,27 +428,62 @@ const META_AREAS = [
     { id: "p_redes", t: "Menos redes sociais", xp: 15 },
   ]},
 ];
-function MetasTab({ s, update, award }) {
+function MetasTab({ s, update, award, fireToast }) {
   const t = today();
   const wk = weekKey();
   const diaDone = (s.metasDia && s.metasDia.date === t) ? s.metasDia.ids : [];
   const semDone = (s.metasSemana && s.metasSemana.week === wk) ? s.metasSemana.ids : [];
+  const bonusDone = (s.metasSemana && s.metasSemana.week === wk && s.metasSemana.bonus) ? s.metasSemana.bonus : [];
+  const totalSem = META_AREAS.reduce((n, a) => n + a.goals.length, 0);
+  const feitasSem = semDone.length;
+  const pctSem = totalSem ? Math.round(feitasSem / totalSem * 100) : 0;
+  const FRASES = [
+    "Tudo posso naquele que me fortalece. — Filipenses 4:13",
+    "A disciplina é a ponte entre metas e conquistas.",
+    "Um dia de cada vez. Deus cuida do resto.",
+    "O impossível dos homens não é o impossível de Deus.",
+    "Constância vence talento.",
+    "Pequenos passos todos os dias constroem grandes vitórias.",
+    "A fé move, a disciplina constrói.",
+    "Confie no Senhor e faça a sua parte.",
+  ];
+  const frase = FRASES[new Date().getDate() % FRASES.length];
 
   const marcarDia = (id, xp) => {
     if (diaDone.includes(id)) return;
     update(p => { const cur = (p.metasDia && p.metasDia.date === t) ? p.metasDia.ids : []; return { ...p, metasDia: { date: t, ids: [...cur, id] } }; });
     award(xp);
   };
-  const marcarSem = (id, xp) => {
+  const marcarSem = (id, xp, area) => {
     if (semDone.includes(id)) return;
-    update(p => { const cur = (p.metasSemana && p.metasSemana.week === wk) ? p.metasSemana.ids : []; return { ...p, metasSemana: { week: wk, ids: [...cur, id] } }; });
+    const areaObj = META_AREAS.find(a => a.area === area);
+    const completa = areaObj && !bonusDone.includes(area) && areaObj.goals.every(g => g.id === id || semDone.includes(g.id));
+    update(p => {
+      const same = p.metasSemana && p.metasSemana.week === wk;
+      const cur = same ? p.metasSemana.ids : [];
+      const curB = same && p.metasSemana.bonus ? p.metasSemana.bonus : [];
+      const extra = completa ? 50 : 0;
+      return { ...p, metasSemana: { week: wk, ids: [...cur, id], bonus: completa ? [...curB, area] : curB }, xp: p.xp + extra, xpByDate: extra ? { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + extra } : p.xpByDate };
+    });
     award(xp);
+    if (completa && fireToast) fireToast(`🏆 Área ${area} completa! +50 XP de bônus`);
   };
 
   return (
     <div className="px-5 pt-6 pb-28" style={{ maxWidth: 440, margin: "0 auto" }}>
       <h1 className="text-2xl font-bold mb-1">Metas</h1>
-      <p className="text-sm mb-5" style={{ color: C.muted }}>Evolua em todas as áreas da sua vida.</p>
+      <p className="text-sm mb-4" style={{ color: C.muted }}>Evolua em todas as áreas da sua vida.</p>
+
+      <div className="rounded-2xl p-4 mb-3" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-bold" style={{ color: C.muted, letterSpacing: ".1em" }}>PROGRESSO DA SEMANA</p>
+          <span className="text-sm font-bold" style={{ color: C.gold }}>{feitasSem}/{totalSem}</span>
+        </div>
+        <div className="h-2.5 rounded-full overflow-hidden" style={{ background: C.cardL }}>
+          <div className="h-full rounded-full" style={{ width: `${pctSem}%`, background: `linear-gradient(90deg, #EBCB6E, ${C.gold})`, transition: "width .4s" }} />
+        </div>
+      </div>
+      <p className="text-sm italic text-center mb-6" style={{ color: C.gold }}>“{frase}”</p>
 
       <div className="rounded-2xl p-4 mb-6" style={{ background: `linear-gradient(180deg, rgba(212,175,55,0.10), ${C.card})`, border: `1px solid ${C.gold}` }}>
         <div className="flex items-center justify-between mb-3">
@@ -477,7 +518,7 @@ function MetasTab({ s, update, award }) {
                 {a.goals.map(g => {
                   const done = semDone.includes(g.id);
                   return (
-                    <button key={g.id} onClick={() => marcarSem(g.id, g.xp)} className="flex items-center gap-3 text-left" style={{ cursor: "pointer" }}>
+                    <button key={g.id} onClick={() => marcarSem(g.id, g.xp, a.area)} className="flex items-center gap-3 text-left" style={{ cursor: "pointer" }}>
                       <div style={{ width: 20, height: 20, borderRadius: "50%", border: `1.5px solid ${done ? C.gold : C.muted}`, background: done ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{done ? <Check size={13} style={{ color: "#000" }} /> : null}</div>
                       <span className="text-sm flex-1" style={{ color: done ? C.muted : C.white, textDecoration: done ? "line-through" : "none" }}>{g.t}</span>
                       {!done ? <span className="text-xs font-bold" style={{ color: C.gold }}>+{g.xp}</span> : null}
@@ -612,7 +653,7 @@ function VivonApp() {
           {s.tab === "dash" && <DashboardTab s={s} setS={setS} />}
           {s.tab === "ai" && <AITab s={s} setS={setS} award={award} />}
           {s.tab === "profile" && <ProfileTab s={s} update={update} award={award} fireToast={fireToast} />}
-          {s.tab === "metas" && <MetasTab s={s} update={update} award={award} />}
+          {s.tab === "metas" && <MetasTab s={s} update={update} award={award} fireToast={fireToast} />}
         </div>
         <Nav tab={s.tab} setTab={(t) => update({ tab: t })} />
       </div>
