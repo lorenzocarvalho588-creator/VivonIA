@@ -293,12 +293,8 @@ const TREINOS = {
     ]},
     { group: "Abdômen", exercises: [
       { name: "Abdominal supra", sets: "3 x 20", video: null },
-      { name: "Abdominal infra", sets: "3 x 20", video: null },
-      { name: "Prancha", sets: "3 x 40s", video: null },
-      { name: "Prancha lateral", sets: "3 x 30s", video: null },
       { name: "Elevação de pernas", sets: "3 x 15", video: null },
-      { name: "Abdominal bicicleta", sets: "3 x 20", video: null },
-      { name: "Abdominal oblíquo", sets: "3 x 20", video: null },
+      { name: "Prancha", sets: "3 x 40s", video: null },
     ]},
   ],
   feminino: [
@@ -330,12 +326,8 @@ const TREINOS = {
     ]},
     { group: "Abdômen", exercises: [
       { name: "Abdominal supra", sets: "3 x 20", video: null },
-      { name: "Abdominal infra", sets: "3 x 20", video: null },
-      { name: "Prancha", sets: "3 x 40s", video: null },
-      { name: "Prancha lateral", sets: "3 x 30s", video: null },
       { name: "Elevação de pernas", sets: "3 x 15", video: null },
-      { name: "Abdominal bicicleta", sets: "3 x 20", video: null },
-      { name: "Abdominal oblíquo", sets: "3 x 20", video: null },
+      { name: "Prancha", sets: "3 x 40s", video: null },
     ]},
   ],
 };
@@ -392,7 +384,7 @@ function AccessGate({ onUnlock }) {
 const META_DIA = [
   { id: "d_treino", t: "Treinar ou me movimentar", icon: Dumbbell, xp: 10 },
   { id: "d_agua", t: "Beber bastante água", icon: Droplet, xp: 10 },
-  { id: "d_mente", t: "Cuidar da mente (ler, orar, meditar)", icon: Brain, xp: 10 },
+  { id: "d_mente", t: "Cuidar da mente (ler, orar, refletir)", icon: Brain, xp: 10 },
   { id: "d_plano", t: "Planejar o meu dia", icon: ClipboardCheck, xp: 10 },
 ];
 const META_AREAS = [
@@ -410,7 +402,7 @@ const META_AREAS = [
   { area: "Mentalidade", emoji: "🧠", goals: [
     { id: "m_ler", t: "Ler ou estudar", xp: 20 },
     { id: "m_grat", t: "Praticar gratidão", xp: 15 },
-    { id: "m_medit", t: "Meditar ou orar", xp: 15 },
+    { id: "m_medit", t: "Orar / momento com Deus", xp: 15 },
   ]},
   { area: "Disciplina", emoji: "🎯", goals: [
     { id: "di_cedo", t: "Acordar cedo", xp: 20 },
