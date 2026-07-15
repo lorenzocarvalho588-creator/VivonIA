@@ -528,7 +528,18 @@ function MetasTab({ s, update, award, fireToast }) {
 function VivonApp() {
   const [s, setS] = useState(null);
   const [toast, setToast] = useState("");
-  const [access, setAccess] = useState(() => { try { return localStorage.getItem("vivon-access") === "1"; } catch (e) { return false; } });
+  const [access, setAccess] = useState(() => {
+    try {
+      if (localStorage.getItem("vivon-access") === "1") return true;
+      const p = new URLSearchParams(window.location.search).get("s");
+      if (p && ACCESS_PASSWORDS.map(x => x.toUpperCase()).includes(p.trim().toUpperCase())) {
+        localStorage.setItem("vivon-access", "1");
+        try { window.history.replaceState({}, "", window.location.pathname); } catch (e) {}
+        return true;
+      }
+      return false;
+    } catch (e) { return false; }
+  });
   const loaded = useRef(false);
   const toastTimer = useRef(null);
 
