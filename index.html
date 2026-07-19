@@ -355,6 +355,8 @@ const DEFAULT = {
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
 
 const ACCESS_PASSWORDS = ["VIVON23", "VIVON51", "VIVON98", "VIVON37", "VIVON84"];
+// Troque pela URL da sua página de vendas ou direto pro checkout do Cakto.
+const VIVON_SALES_URL = "https://vivonapp.netlify.app";
 function AccessGate({ onUnlock }) {
   const [pw, setPw] = useState("");
   const [err, setErr] = useState(false);
@@ -376,7 +378,10 @@ function AccessGate({ onUnlock }) {
         <input type="text" value={pw} onChange={(e) => { setPw(e.target.value); setErr(false); }} onKeyDown={(e) => { if (e.key === "Enter") tryUnlock(); }} placeholder="Sua senha de acesso" autoCapitalize="characters" autoCorrect="off" spellCheck="false" style={{ width: "100%", background: C.card, border: `1px solid ${err ? "#E0533B" : C.border}`, borderRadius: 14, padding: "14px 16px", color: C.white, fontSize: 16, textAlign: "center", letterSpacing: ".08em", outline: "none", marginBottom: 12 }} />
         {err ? <p style={{ color: "#E0533B", fontSize: 13, marginBottom: 12 }}>Senha inválida. Confira o e-mail da sua compra.</p> : null}
         <button onClick={tryUnlock} className="w-full rounded-2xl py-4 font-bold" style={{ background: `linear-gradient(180deg, #EBCB6E, ${C.gold})`, color: "#000", border: "none", cursor: "pointer", fontSize: 16 }}>Entrar</button>
-        <p style={{ color: C.muted, fontSize: 12, marginTop: 20 }}>Ainda não tem acesso? Assine o VIVON para receber sua senha.</p>
+        <button onClick={() => { window.open(VIVON_SALES_URL, "_blank"); }} style={{ background: "none", border: "none", color: C.muted, fontSize: 12, marginTop: 20, cursor: "pointer", lineHeight: 1.5 }}>
+          Ainda não tem acesso?{" "}
+          <span style={{ color: C.gold, fontWeight: 700, textDecoration: "underline" }}>Conhecer o VIVON</span>
+        </button>
       </div>
     </div>
   );
@@ -710,7 +715,7 @@ function Onboarding({ s, update, award }) {
             <p style={{ color: "#CFCFCF" }} className="text-lg max-w-[280px] leading-relaxed font-light">Corpo, mente, hábitos e disciplina em uma única plataforma movida por inteligência artificial.</p>
           </div>
         </div>
-        <div style={{ animation: "vFade 1s ease both", animationDelay: ".34s" }}>
+        <div style={{ animation: "vFade .7s ease both" }}>
           <Btn onClick={next}>Começar minha evolução <ArrowRight size={18} /></Btn>
           <p className="text-center text-xs mt-4" style={{ color: C.muted }}>Leva menos de 1 minuto.</p>
         </div>
