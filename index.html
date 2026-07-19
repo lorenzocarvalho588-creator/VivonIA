@@ -987,12 +987,19 @@ function TreinosTab({ update, award, fireToast }) {
   );
 }
 function ExerciseRow({ ex, gender }) {
+  const [err, setErr] = useState(false);
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: C.cardL }}>
       <div className="px-3 pt-2.5 pb-2"><p className="font-medium text-sm">{ex.name}</p><p className="text-xs" style={{ color: C.muted }}>{ex.sets}</p></div>
       <div className="px-3 pb-3">
-        {ex.video ? (
-          <video src={ex.video} controls playsInline className="w-full rounded-lg" style={{ aspectRatio: "16/9", background: "#000" }} />
+        {ex.video && !err ? (
+          <video src={ex.video} controls playsInline preload="metadata" onError={() => setErr(true)} className="w-full rounded-lg" style={{ aspectRatio: "16/9", background: "#000" }} />
+        ) : ex.video && err ? (
+          <div className="w-full rounded-lg flex flex-col items-center justify-center gap-1.5 px-3 text-center" style={{ aspectRatio: "16/9", background: "#000", border: `1.5px dashed #E0533B` }}>
+            <span className="text-xs font-bold" style={{ color: "#E0533B" }}>Vídeo não carregou</span>
+            <span className="text-[10px] break-all" style={{ color: "rgba(255,255,255,0.55)" }}>Procurando: {decodeURIComponent(ex.video)}</span>
+            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>Confira se esse arquivo está na raiz do Netlify, com o nome idêntico.</span>
+          </div>
         ) : (
           <div className="w-full rounded-lg flex flex-col items-center justify-center gap-1.5" style={{ aspectRatio: "16/9", background: "#000", border: `1.5px dashed ${C.border}` }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill={C.gold}><path d="M8 5v14l11-7z" /></svg>
