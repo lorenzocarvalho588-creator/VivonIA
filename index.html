@@ -350,6 +350,10 @@ const DEFAULT = {
   weeklyGoals: { week: "", ids: [] },
   metasDia: { date: "", ids: [] },
   metasSemana: { week: "", ids: [], bonus: [] },
+  metasProprias: [],
+  metasExtras: { date: "", itens: [] },
+  diario: {},
+  diarioXp: [],
 };
 
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
@@ -386,54 +390,114 @@ function AccessGate({ onUnlock }) {
     </div>
   );
 }
+
 const META_DIA = [
   { id: "d_treino", t: "Treinar ou me movimentar", icon: Dumbbell, xp: 10 },
   { id: "d_agua", t: "Beber bastante água", icon: Droplet, xp: 10 },
   { id: "d_mente", t: "Cuidar da mente (ler, orar, refletir)", icon: Brain, xp: 10 },
   { id: "d_plano", t: "Planejar o meu dia", icon: ClipboardCheck, xp: 10 },
+  { id: "d_sono", t: "Dormir bem esta noite", icon: Bed, xp: 10 },
+  { id: "d_comida", t: "Comer de forma limpa", icon: Utensils, xp: 10 },
+  { id: "d_grat", t: "Agradecer por 3 coisas", icon: Sparkles, xp: 10 },
+  { id: "d_foco", t: "Uma hora longe do celular", icon: Target, xp: 10 },
 ];
+
 const META_AREAS = [
   { area: "Fé", emoji: "✝️", goals: [
     { id: "fe_orar", t: "Orar todos os dias", xp: 20 },
     { id: "fe_biblia", t: "Ler a Bíblia / a Palavra", xp: 20 },
     { id: "fe_igreja", t: "Ir à igreja ou célula", xp: 25 },
     { id: "fe_grat", t: "Agradecer a Deus", xp: 15 },
+    { id: "fe_versiculo", t: "Decorar um versículo", xp: 20 },
+    { id: "fe_jejum", t: "Fazer um jejum com propósito", xp: 30 },
+    { id: "fe_ajudar", t: "Ajudar alguém sem esperar nada", xp: 25 },
+    { id: "fe_louvor", t: "Ouvir louvor em vez de barulho", xp: 15 },
   ]},
   { area: "Físico", emoji: "💪", goals: [
     { id: "f_treino4", t: "Treinar 4x nesta semana", xp: 40 },
     { id: "f_sono", t: "Dormir bem (7h+)", xp: 20 },
     { id: "f_alim", t: "Manter a alimentação limpa", xp: 20 },
+    { id: "f_agua", t: "Bater a meta de água todo dia", xp: 25 },
+    { id: "f_cardio", t: "Fazer cardio 2x", xp: 25 },
+    { id: "f_along", t: "Alongar depois do treino", xp: 15 },
+    { id: "f_recorde", t: "Bater um recorde pessoal", xp: 35 },
+    { id: "f_foto", t: "Registrar a foto de progresso", xp: 20 },
   ]},
   { area: "Mentalidade", emoji: "🧠", goals: [
     { id: "m_ler", t: "Ler ou estudar", xp: 20 },
     { id: "m_grat", t: "Praticar gratidão", xp: 15 },
     { id: "m_medit", t: "Orar / momento com Deus", xp: 15 },
+    { id: "m_livro", t: "Avançar num livro", xp: 25 },
+    { id: "m_reflexao", t: "Escrever o que me travou", xp: 20 },
+    { id: "m_silencio", t: "10 minutos de silêncio", xp: 15 },
+    { id: "m_revisar", t: "Revisar a minha semana", xp: 25 },
   ]},
   { area: "Disciplina", emoji: "🎯", goals: [
     { id: "di_cedo", t: "Acordar cedo", xp: 20 },
     { id: "di_rotina", t: "Cumprir a minha rotina", xp: 20 },
     { id: "di_proc", t: "Não procrastinar", xp: 20 },
+    { id: "di_soneca", t: "Levantar sem apertar a soneca", xp: 20 },
+    { id: "di_cama", t: "Arrumar a cama todo dia", xp: 15 },
+    { id: "di_dificil", t: "Fazer o mais difícil primeiro", xp: 30 },
+    { id: "di_palavra", t: "Cumprir o que eu prometi", xp: 25 },
+    { id: "di_semvontade", t: "Treinar mesmo sem vontade", xp: 35 },
   ]},
   { area: "Financeiro", emoji: "💰", goals: [
     { id: "fi_impulso", t: "Não gastar por impulso", xp: 20 },
     { id: "fi_guardar", t: "Guardar dinheiro", xp: 25 },
     { id: "fi_revisar", t: "Revisar os meus gastos", xp: 15 },
+    { id: "fi_anotar", t: "Anotar tudo o que gastei", xp: 20 },
+    { id: "fi_assinatura", t: "Cancelar o que não uso", xp: 20 },
+    { id: "fi_vender", t: "Vender algo parado", xp: 25 },
   ]},
   { area: "Produtividade", emoji: "⚡", goals: [
     { id: "p_foco", t: "Foco no trabalho / estudo", xp: 20 },
     { id: "p_tarefas", t: "Concluir as minhas tarefas", xp: 20 },
     { id: "p_redes", t: "Menos redes sociais", xp: 15 },
+    { id: "p_planejar", t: "Planejar a semana no domingo", xp: 25 },
+    { id: "p_parada", t: "Terminar uma tarefa parada", xp: 30 },
+    { id: "p_publicar", t: "Publicar algo meu", xp: 30 },
+    { id: "p_aprender", t: "Aprender uma coisa nova", xp: 25 },
+  ]},
+  { area: "Relacionamentos", emoji: "❤️", goals: [
+    { id: "r_familia", t: "Ligar para a família", xp: 20 },
+    { id: "r_amigo", t: "Encontrar um amigo de verdade", xp: 20 },
+    { id: "r_elogio", t: "Elogiar alguém sinceramente", xp: 15 },
+    { id: "r_desculpa", t: "Resolver algo mal resolvido", xp: 30 },
+    { id: "r_presente", t: "Jantar sem celular na mesa", xp: 15 },
+    { id: "r_obrigado", t: "Agradecer quem me ajudou", xp: 15 },
+  ]},
+  { area: "Saúde", emoji: "🌿", goals: [
+    { id: "s_acucar", t: "Cortar o açúcar", xp: 25 },
+    { id: "s_refri", t: "Semana sem refrigerante", xp: 25 },
+    { id: "s_cedo", t: "Dormir antes das 23h", xp: 20 },
+    { id: "s_sol", t: "Pegar sol de manhã", xp: 15 },
+    { id: "s_caminhada", t: "Caminhar ao ar livre", xp: 20 },
+    { id: "s_check", t: "Cuidar de algo que eu venho adiando", xp: 30 },
   ]},
 ];
+
 function MetasTab({ s, update, award, fireToast }) {
   const t = today();
   const wk = weekKey();
   const diaDone = (s.metasDia && s.metasDia.date === t) ? s.metasDia.ids : [];
   const semDone = (s.metasSemana && s.metasSemana.week === wk) ? s.metasSemana.ids : [];
   const bonusDone = (s.metasSemana && s.metasSemana.week === wk && s.metasSemana.bonus) ? s.metasSemana.bonus : [];
-  const totalSem = META_AREAS.reduce((n, a) => n + a.goals.length, 0);
+  const proprias = s.metasProprias || [];
+  const extras = (s.metasExtras && s.metasExtras.date === t) ? s.metasExtras.itens : [];
+  const diarioHoje = (s.diario && s.diario[t]) ? s.diario[t] : "";
+  const diarioPago = s.diarioXp || [];
+
+  const [novoExtra, setNovoExtra] = useState("");
+  const [novaMeta, setNovaMeta] = useState("");
+  const [novaArea, setNovaArea] = useState("Disciplina");
+  const [abrirCriar, setAbrirCriar] = useState(false);
+  const [verHistorico, setVerHistorico] = useState(false);
+
+  const totalSem = META_AREAS.reduce((n, a) => n + a.goals.length, 0) + proprias.length;
   const feitasSem = semDone.length;
   const pctSem = totalSem ? Math.round(feitasSem / totalSem * 100) : 0;
+
   const FRASES = [
     "Tudo posso naquele que me fortalece. — Filipenses 4:13",
     "A disciplina é a ponte entre metas e conquistas.",
@@ -451,6 +515,7 @@ function MetasTab({ s, update, award, fireToast }) {
     update(p => { const cur = (p.metasDia && p.metasDia.date === t) ? p.metasDia.ids : []; return { ...p, metasDia: { date: t, ids: [...cur, id] } }; });
     award(xp);
   };
+
   const marcarSem = (id, xp, area) => {
     if (semDone.includes(id)) return;
     const areaObj = META_AREAS.find(a => a.area === area);
@@ -465,6 +530,59 @@ function MetasTab({ s, update, award, fireToast }) {
     award(xp);
     if (completa && fireToast) fireToast(`🏆 Área ${area} completa! +50 XP de bônus`);
   };
+
+  const addExtra = () => {
+    const txt = novoExtra.trim();
+    if (!txt) return;
+    const item = { id: "e" + Date.now(), t: txt, feito: false };
+    update(p => { const cur = (p.metasExtras && p.metasExtras.date === t) ? p.metasExtras.itens : []; return { ...p, metasExtras: { date: t, itens: [...cur, item] } }; });
+    setNovoExtra("");
+  };
+
+  const alternarExtra = (id) => {
+    let virouFeito = false;
+    update(p => {
+      const cur = (p.metasExtras && p.metasExtras.date === t) ? p.metasExtras.itens : [];
+      const novos = cur.map(x => { if (x.id !== id) return x; if (!x.feito) virouFeito = true; return { ...x, feito: !x.feito }; });
+      return { ...p, metasExtras: { date: t, itens: novos } };
+    });
+    if (virouFeito) award(10);
+  };
+
+  const removerExtra = (id) => {
+    update(p => { const cur = (p.metasExtras && p.metasExtras.date === t) ? p.metasExtras.itens : []; return { ...p, metasExtras: { date: t, itens: cur.filter(x => x.id !== id) } }; });
+  };
+
+  const criarMeta = () => {
+    const txt = novaMeta.trim();
+    if (!txt) return;
+    const nova = { id: "pr" + Date.now(), t: txt, area: novaArea, xp: 25 };
+    update(p => ({ ...p, metasProprias: [...(p.metasProprias || []), nova] }));
+    setNovaMeta("");
+    setAbrirCriar(false);
+    if (fireToast) fireToast("Meta criada! Ela vale 25 XP.");
+  };
+
+  const removerMeta = (id) => {
+    update(p => ({ ...p, metasProprias: (p.metasProprias || []).filter(x => x.id !== id) }));
+  };
+
+  const escreverDiario = (txt) => {
+    update(p => ({ ...p, diario: { ...(p.diario || {}), [t]: txt } }));
+    if (txt.trim().length >= 20 && !diarioPago.includes(t)) {
+      update(p => ({ ...p, diarioXp: [...(p.diarioXp || []), t] }));
+      award(15);
+      if (fireToast) fireToast("📝 Dia registrado · +15 XP");
+    }
+  };
+
+  const diasComTexto = Object.keys(s.diario || {}).filter(d => (s.diario[d] || "").trim()).sort().reverse().slice(0, 14);
+
+  const Caixinha = ({ on, size = 20 }) => (
+    <div style={{ width: size, height: size, borderRadius: "50%", border: `1.5px solid ${on ? C.gold : C.muted}`, background: on ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      {on ? <Check size={size - 7} style={{ color: "#000" }} /> : null}
+    </div>
+  );
 
   return (
     <div className="px-5 pt-6 pb-28" style={{ maxWidth: 440, margin: "0 auto" }}>
@@ -482,7 +600,33 @@ function MetasTab({ s, update, award, fireToast }) {
       </div>
       <p className="text-sm italic text-center mb-6" style={{ color: C.gold }}>“{frase}”</p>
 
-      <div className="rounded-2xl p-4 mb-6" style={{ background: `linear-gradient(180deg, rgba(212,175,55,0.10), ${C.card})`, border: `1px solid ${C.gold}` }}>
+      {/* ---------- O QUE EU VOU FAZER HOJE ---------- */}
+      <div className="rounded-2xl p-4 mb-4" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-bold flex items-center gap-2"><Target size={17} style={{ color: C.gold }} /> Meus objetivos de hoje</p>
+          <span className="text-xs font-bold" style={{ color: C.gold }}>{extras.filter(x => x.feito).length}/{extras.length}</span>
+        </div>
+        <div className="flex gap-2 mb-3">
+          <input value={novoExtra} onChange={e => setNovoExtra(e.target.value)} onKeyDown={e => { if (e.key === "Enter") addExtra(); }} placeholder="Ex: gravar 2 vídeos de treino" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, border: "none", minWidth: 0 }} />
+          <button onClick={addExtra} className="rounded-xl px-3 flex items-center justify-center" style={{ background: C.gold, color: "#000", border: "none", cursor: "pointer" }}><Plus size={17} /></button>
+        </div>
+        {extras.length === 0 ? (
+          <p className="text-xs" style={{ color: C.muted }}>Escreva aqui as coisas que só valem para hoje. Cada uma concluída vale 10 XP.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {extras.map(x => (
+              <div key={x.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: x.feito ? "rgba(212,175,55,0.12)" : C.cardL, border: `1px solid ${x.feito ? C.gold : "transparent"}` }}>
+                <button onClick={() => alternarExtra(x.id)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}><Caixinha on={x.feito} /></button>
+                <span className="text-sm flex-1" style={{ color: x.feito ? C.muted : C.white, textDecoration: x.feito ? "line-through" : "none" }}>{x.t}</span>
+                <button onClick={() => removerExtra(x.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}><X size={14} style={{ color: C.muted }} /></button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ---------- META DO DIA ---------- */}
+      <div className="rounded-2xl p-4 mb-4" style={{ background: `linear-gradient(180deg, rgba(212,175,55,0.10), ${C.card})`, border: `1px solid ${C.gold}` }}>
         <div className="flex items-center justify-between mb-3">
           <p className="font-bold flex items-center gap-2"><Sparkles size={17} style={{ color: C.gold }} /> Meta do dia</p>
           <span className="text-xs font-bold" style={{ color: C.gold }}>{diaDone.length}/{META_DIA.length}</span>
@@ -492,7 +636,7 @@ function MetasTab({ s, update, award, fireToast }) {
             const done = diaDone.includes(g.id);
             return (
               <button key={g.id} onClick={() => marcarDia(g.id, g.xp)} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left" style={{ background: done ? "rgba(212,175,55,0.12)" : C.cardL, border: `1px solid ${done ? C.gold : "transparent"}`, cursor: "pointer" }}>
-                <div style={{ width: 22, height: 22, borderRadius: "50%", border: `1.5px solid ${done ? C.gold : C.muted}`, background: done ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{done ? <Check size={14} style={{ color: "#000" }} /> : null}</div>
+                <Caixinha on={done} size={22} />
                 <g.icon size={16} style={{ color: C.gold }} />
                 <span className="text-sm flex-1" style={{ color: done ? C.muted : C.white, textDecoration: done ? "line-through" : "none" }}>{g.t}</span>
               </button>
@@ -501,22 +645,100 @@ function MetasTab({ s, update, award, fireToast }) {
         </div>
       </div>
 
+      {/* ---------- O QUE EU FIZ HOJE ---------- */}
+      <div className="rounded-2xl p-4 mb-6" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+        <p className="font-bold flex items-center gap-2 mb-1"><BookOpen size={17} style={{ color: C.gold }} /> O que eu fiz hoje</p>
+        <p className="text-xs mb-3" style={{ color: C.muted }}>Escreva do seu jeito. Vitória, treino, tropeço, o que veio. Vale 15 XP por dia.</p>
+        <textarea value={diarioHoje} onChange={e => escreverDiario(e.target.value)} rows={5} placeholder="Hoje eu..." className="w-full rounded-xl px-3 py-3 text-sm outline-none" style={{ background: C.cardL, color: C.white, border: "none", resize: "none", lineHeight: 1.6 }} />
+        {diasComTexto.length > 0 ? (
+          <button onClick={() => setVerHistorico(!verHistorico)} className="w-full mt-3 flex items-center justify-center gap-1.5 text-xs font-bold" style={{ background: "none", border: "none", color: C.gold, cursor: "pointer" }}>
+            {verHistorico ? "Esconder os dias anteriores" : `Ver os meus ${diasComTexto.length} dias registrados`}
+            <ChevronRight size={14} style={{ transform: verHistorico ? "rotate(90deg)" : "none", transition: "transform .2s" }} />
+          </button>
+        ) : null}
+        {verHistorico ? (
+          <div className="mt-3 flex flex-col gap-2">
+            {diasComTexto.map(d => (
+              <div key={d} className="rounded-xl px-3 py-2.5" style={{ background: C.cardL }}>
+                <p className="text-xs font-bold mb-1" style={{ color: C.gold }}>{d.split("-").reverse().join("/")}</p>
+                <p className="text-sm whitespace-pre-wrap" style={{ color: "#CFCFCF", lineHeight: 1.5 }}>{s.diario[d]}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {/* ---------- MINHAS PRÓPRIAS METAS ---------- */}
+      <div className="rounded-2xl p-4 mb-6" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-bold flex items-center gap-2"><Star size={17} style={{ color: C.gold }} /> Minhas metas</p>
+          <span className="text-xs font-bold" style={{ color: C.gold }}>{proprias.filter(g => semDone.includes(g.id)).length}/{proprias.length}</span>
+        </div>
+
+        {proprias.length === 0 && !abrirCriar ? (
+          <p className="text-xs mb-3" style={{ color: C.muted }}>Crie metas com as suas palavras. Elas renovam toda semana, junto com as outras.</p>
+        ) : null}
+
+        {proprias.length > 0 ? (
+          <div className="flex flex-col gap-2.5 mb-3">
+            {proprias.map(g => {
+              const done = semDone.includes(g.id);
+              return (
+                <div key={g.id} className="flex items-center gap-3">
+                  <button onClick={() => marcarSem(g.id, g.xp, g.area)} className="flex items-center gap-3 flex-1 text-left" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                    <Caixinha on={done} />
+                    <div className="flex-1">
+                      <span className="text-sm block" style={{ color: done ? C.muted : C.white, textDecoration: done ? "line-through" : "none" }}>{g.t}</span>
+                      <span className="text-[11px]" style={{ color: C.muted }}>{g.area}</span>
+                    </div>
+                    {!done ? <span className="text-xs font-bold" style={{ color: C.gold }}>+{g.xp}</span> : null}
+                  </button>
+                  <button onClick={() => removerMeta(g.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}><X size={14} style={{ color: C.muted }} /></button>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {abrirCriar ? (
+          <div className="flex flex-col gap-2">
+            <input value={novaMeta} onChange={e => setNovaMeta(e.target.value)} onKeyDown={e => { if (e.key === "Enter") criarMeta(); }} placeholder="Nome da minha meta" className="w-full rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, border: "none" }} />
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {META_AREAS.map(a => (
+                <button key={a.area} onClick={() => setNovaArea(a.area)} className="px-3 py-1.5 rounded-full whitespace-nowrap text-xs font-semibold" style={{ background: novaArea === a.area ? C.gold : C.cardL, color: novaArea === a.area ? "#000" : C.muted, border: "none", cursor: "pointer" }}>{a.emoji} {a.area}</button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={criarMeta} className="flex-1 rounded-xl py-2.5 text-sm font-bold" style={{ background: C.gold, color: "#000", border: "none", cursor: "pointer" }}>Criar meta</button>
+              <button onClick={() => { setAbrirCriar(false); setNovaMeta(""); }} className="rounded-xl px-4 text-sm" style={{ background: C.cardL, color: C.muted, border: "none", cursor: "pointer" }}>Cancelar</button>
+            </div>
+          </div>
+        ) : (
+          <button onClick={() => setAbrirCriar(true)} className="w-full rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-1.5" style={{ background: C.cardL, color: C.gold, border: `1px dashed ${C.border}`, cursor: "pointer" }}><Plus size={15} /> Criar a minha própria meta</button>
+        )}
+      </div>
+
+      {/* ---------- METAS DA SEMANA POR ÁREA ---------- */}
       <p className="text-xs font-bold mb-3" style={{ color: C.muted, letterSpacing: ".1em" }}>METAS DA SEMANA · RENOVAM SEGUNDA</p>
       <div className="flex flex-col gap-4">
         {META_AREAS.map(a => {
           const feitas = a.goals.filter(g => semDone.includes(g.id)).length;
+          const completa = feitas === a.goals.length;
           return (
-            <div key={a.area} className="rounded-2xl p-4" style={{ background: C.card, border: `1px solid ${C.border}` }}>
+            <div key={a.area} className="rounded-2xl p-4" style={{ background: C.card, border: `1px solid ${completa ? C.gold : C.border}` }}>
               <div className="flex items-center justify-between mb-3">
                 <p className="font-bold flex items-center gap-2"><span style={{ fontSize: 18 }}>{a.emoji}</span> {a.area}</p>
-                <span className="text-xs font-bold" style={{ color: C.gold }}>{feitas}/{a.goals.length}</span>
+                <span className="text-xs font-bold" style={{ color: C.gold }}>{completa ? "🏆 " : ""}{feitas}/{a.goals.length}</span>
+              </div>
+              <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ background: C.cardL }}>
+                <div className="h-full rounded-full" style={{ width: `${Math.round(feitas / a.goals.length * 100)}%`, background: C.gold, transition: "width .3s" }} />
               </div>
               <div className="flex flex-col gap-2.5">
                 {a.goals.map(g => {
                   const done = semDone.includes(g.id);
                   return (
-                    <button key={g.id} onClick={() => marcarSem(g.id, g.xp, a.area)} className="flex items-center gap-3 text-left" style={{ cursor: "pointer" }}>
-                      <div style={{ width: 20, height: 20, borderRadius: "50%", border: `1.5px solid ${done ? C.gold : C.muted}`, background: done ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{done ? <Check size={13} style={{ color: "#000" }} /> : null}</div>
+                    <button key={g.id} onClick={() => marcarSem(g.id, g.xp, a.area)} className="flex items-center gap-3 text-left" style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                      <Caixinha on={done} />
                       <span className="text-sm flex-1" style={{ color: done ? C.muted : C.white, textDecoration: done ? "line-through" : "none" }}>{g.t}</span>
                       {!done ? <span className="text-xs font-bold" style={{ color: C.gold }}>+{g.xp}</span> : null}
                     </button>
@@ -527,6 +749,10 @@ function MetasTab({ s, update, award, fireToast }) {
           );
         })}
       </div>
+
+      <p className="text-xs text-center mt-6 leading-relaxed" style={{ color: C.muted }}>
+        {META_AREAS.length} áreas · {META_AREAS.reduce((n, a) => n + a.goals.length, 0)} metas semanais · completar uma área inteira vale +50 XP de bônus.
+      </p>
     </div>
   );
 }
