@@ -373,6 +373,12 @@ const DEFAULT = {
 
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
 
+// ======================================================
+// ACESSO: false = app aberto pra todo mundo (sem senha)
+//         true  = volta a pedir senha
+// ======================================================
+const EXIGIR_SENHA = false;
+
 const ACCESS_PASSWORDS = ["VIVON23", "VIVON51", "VIVON98", "VIVON37", "VIVON84"];
 // Troque pela URL da sua página de vendas ou direto pro checkout do Cakto.
 const VIVON_SALES_URL = "https://vivonapp.netlify.app";
@@ -738,6 +744,7 @@ function VivonApp() {
   const [s, setS] = useState(null);
   const [toast, setToast] = useState("");
   const [access, setAccess] = useState(() => {
+    if (!EXIGIR_SENHA) return true;
     try {
       if (localStorage.getItem("vivon-access") === "1") return true;
       const p = new URLSearchParams(window.location.search).get("s");
