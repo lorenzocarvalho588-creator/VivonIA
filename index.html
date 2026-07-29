@@ -194,6 +194,19 @@ function lastN(n) { const a = []; for (let i = n - 1; i >= 0; i--) { const d = n
 function dayLabel(iso) { return ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][new Date(iso + "T12:00").getDay()]; }
 function weekKey() { const d = new Date(); const off = (d.getDay() + 6) % 7; d.setDate(d.getDate() - off); return d.toISOString().slice(0, 10); }
 function weekDays() { const d = new Date(); const off = (d.getDay() + 6) % 7; const mon = new Date(d); mon.setDate(d.getDate() - off); const arr = []; for (let i = 0; i < 7; i++) { const x = new Date(mon); x.setDate(mon.getDate() + i); arr.push(x.toISOString().slice(0, 10)); } return arr; }
+function weekDaysOffset(back) { const d = new Date(); const off = (d.getDay() + 6) % 7; const mon = new Date(d); mon.setDate(d.getDate() - off - (7 * back)); const arr = []; for (let i = 0; i < 7; i++) { const x = new Date(mon); x.setDate(mon.getDate() + i); arr.push(x.toISOString().slice(0, 10)); } return arr; }
+function moodToday(s) { return (s.mood && s.mood.date === today()) ? s.mood : null; }
+function pendentesHoje(s) {
+  const out = [];
+  if (waterToday(s) < 8) out.push({ t: `Faltam ${8 - waterToday(s)} copos de água`, pts: Math.round((1 - waterToday(s) / 8) * 20) });
+  if (sleepToday(s) < 8) out.push({ t: "Registrar o seu sono", pts: Math.round((1 - sleepToday(s) / 8) * 15) });
+  if (!workoutToday(s)) out.push({ t: "Fazer um treino", pts: 20 });
+  if (!mealToday(s)) out.push({ t: "Registrar uma refeição", pts: 15 });
+  if (habitsDoneToday(s) < HABITS.length) out.push({ t: `Faltam ${HABITS.length - habitsDoneToday(s)} hábitos`, pts: Math.round((1 - habitsDoneToday(s) / HABITS.length) * 20) });
+  if (!aiToday(s)) out.push({ t: "Falar com a VIVON AI", pts: 10 });
+  return out;
+}
+
 function buildWeeklyGoals(s) {
   const days = weekDays();
   const workoutsWeek = (s.workouts || []).filter(w => days.includes(w.date)).length;
@@ -354,6 +367,8 @@ const DEFAULT = {
   metasExtras: { date: "", itens: [] },
   diario: {},
   diarioXp: [],
+  mood: { date: "", humor: 0, energia: 0 },
+  moodByDate: {},
 };
 
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
@@ -485,14 +500,11 @@ function MetasTab({ s, update, award, fireToast }) {
   const bonusDone = (s.metasSemana && s.metasSemana.week === wk && s.metasSemana.bonus) ? s.metasSemana.bonus : [];
   const proprias = s.metasProprias || [];
   const extras = (s.metasExtras && s.metasExtras.date === t) ? s.metasExtras.itens : [];
-  const diarioHoje = (s.diario && s.diario[t]) ? s.diario[t] : "";
-  const diarioPago = s.diarioXp || [];
 
   const [novoExtra, setNovoExtra] = useState("");
   const [novaMeta, setNovaMeta] = useState("");
   const [novaArea, setNovaArea] = useState("Disciplina");
   const [abrirCriar, setAbrirCriar] = useState(false);
-  const [verHistorico, setVerHistorico] = useState(false);
 
   const totalSem = META_AREAS.reduce((n, a) => n + a.goals.length, 0) + proprias.length;
   const feitasSem = semDone.length;
@@ -567,17 +579,6 @@ function MetasTab({ s, update, award, fireToast }) {
     update(p => ({ ...p, metasProprias: (p.metasProprias || []).filter(x => x.id !== id) }));
   };
 
-  const escreverDiario = (txt) => {
-    update(p => ({ ...p, diario: { ...(p.diario || {}), [t]: txt } }));
-    if (txt.trim().length >= 20 && !diarioPago.includes(t)) {
-      update(p => ({ ...p, diarioXp: [...(p.diarioXp || []), t] }));
-      award(15);
-      if (fireToast) fireToast("📝 Dia registrado · +15 XP");
-    }
-  };
-
-  const diasComTexto = Object.keys(s.diario || {}).filter(d => (s.diario[d] || "").trim()).sort().reverse().slice(0, 14);
-
   const Caixinha = ({ on, size = 20 }) => (
     <div style={{ width: size, height: size, borderRadius: "50%", border: `1.5px solid ${on ? C.gold : C.muted}`, background: on ? C.gold : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
       {on ? <Check size={size - 7} style={{ color: "#000" }} /> : null}
@@ -643,29 +644,6 @@ function MetasTab({ s, update, award, fireToast }) {
             );
           })}
         </div>
-      </div>
-
-      {/* ---------- O QUE EU FIZ HOJE ---------- */}
-      <div className="rounded-2xl p-4 mb-6" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-        <p className="font-bold flex items-center gap-2 mb-1"><BookOpen size={17} style={{ color: C.gold }} /> O que eu fiz hoje</p>
-        <p className="text-xs mb-3" style={{ color: C.muted }}>Escreva do seu jeito. Vitória, treino, tropeço, o que veio. Vale 15 XP por dia.</p>
-        <textarea value={diarioHoje} onChange={e => escreverDiario(e.target.value)} rows={5} placeholder="Hoje eu..." className="w-full rounded-xl px-3 py-3 text-sm outline-none" style={{ background: C.cardL, color: C.white, border: "none", resize: "none", lineHeight: 1.6 }} />
-        {diasComTexto.length > 0 ? (
-          <button onClick={() => setVerHistorico(!verHistorico)} className="w-full mt-3 flex items-center justify-center gap-1.5 text-xs font-bold" style={{ background: "none", border: "none", color: C.gold, cursor: "pointer" }}>
-            {verHistorico ? "Esconder os dias anteriores" : `Ver os meus ${diasComTexto.length} dias registrados`}
-            <ChevronRight size={14} style={{ transform: verHistorico ? "rotate(90deg)" : "none", transition: "transform .2s" }} />
-          </button>
-        ) : null}
-        {verHistorico ? (
-          <div className="mt-3 flex flex-col gap-2">
-            {diasComTexto.map(d => (
-              <div key={d} className="rounded-xl px-3 py-2.5" style={{ background: C.cardL }}>
-                <p className="text-xs font-bold mb-1" style={{ color: C.gold }}>{d.split("-").reverse().join("/")}</p>
-                <p className="text-sm whitespace-pre-wrap" style={{ color: "#CFCFCF", lineHeight: 1.5 }}>{s.diario[d]}</p>
-              </div>
-            ))}
-          </div>
-        ) : null}
       </div>
 
       {/* ---------- MINHAS PRÓPRIAS METAS ---------- */}
@@ -882,7 +860,7 @@ function VivonApp() {
         )}
         <div className="flex-1 overflow-y-auto pb-24">
           {s.tab === "home" && <HomeTab s={s} update={update} />}
-          {s.tab === "track" && <TrackTab s={s} update={update} award={award} />}
+          {s.tab === "track" && <TrackTab s={s} update={update} award={award} fireToast={fireToast} />}
           {s.tab === "treinos" && <TreinosTab update={update} award={award} fireToast={fireToast} />}
           {s.tab === "dash" && <DashboardTab s={s} setS={setS} />}
           {s.tab === "ai" && <AITab s={s} setS={setS} award={award} />}
@@ -1247,6 +1225,23 @@ function DashboardTab({ s, setS }) {
   const [analyzing, setAnalyzing] = useState(false);
   const goal = GOALS.find(g => g.k === s.profile.goal);
 
+  const semAtual = weekDaysOffset(0), semPassada = weekDaysOffset(1);
+  const somaXp = ds => ds.reduce((a, d) => a + (s.xpByDate[d] || 0), 0);
+  const contaTreinos = ds => (s.workouts || []).filter(w => ds.includes(w.date)).length;
+  const contaAtivos = ds => ds.filter(d => (s.xpByDate[d] || 0) > 0).length;
+  const comparativo = [
+    { l: "XP", ag: somaXp(semAtual), an: somaXp(semPassada) },
+    { l: "Treinos", ag: contaTreinos(semAtual), an: contaTreinos(semPassada) },
+    { l: "Dias ativos", ag: contaAtivos(semAtual), an: contaAtivos(semPassada) },
+  ];
+  const dias14 = lastN(14);
+  const mb = s.moodByDate || {};
+  const temMood = dias14.some(d => mb[d] && (mb[d].humor || mb[d].energia));
+  const mediaDe = campo => {
+    const vals = dias14.map(d => (mb[d] || {})[campo]).filter(v => v > 0);
+    return vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : "—";
+  };
+
   const analyze = async () => {
     setAnalyzing(true);
     const data = `Dados do usuário ${s.profile.name}: objetivo ${goal?.t || "—"}, nível ${li.level}, ${s.xp} XP, sequência ${s.streak} dias, score de hoje ${score}/100, consistência semanal ${cons}%, peso inicial ${iw ?? "—"}kg, peso atual ${cw ?? "—"}kg (variação ${delta ?? "—"}kg), ${s.workouts.length} treinos registrados, ${totalAi(s)} conversas com a IA, hábitos hoje ${habitsDoneToday(s)}/6, água hoje ${waterToday(s)}/8 copos.`;
@@ -1272,6 +1267,59 @@ function DashboardTab({ s, setS }) {
       <div className="grid grid-cols-4 gap-2"><Stat icon={Crown} v={li.level} l="Nível" /><Stat icon={Zap} v={s.xp} l="XP" /><Stat icon={Flame} v={s.streak} l="Seq." /><Stat icon={Activity} v={`${cons}%`} l="Consist." /></div>
       <Section title="Evolução semanal" icon={TrendingUp}><MiniBars dates={lastN(7)} data={s.xpByDate} /><div className="flex justify-between mt-1">{lastN(7).map(d => <span key={d} className="text-[10px] flex-1 text-center" style={{ color: d === today() ? C.gold : C.muted }}>{dayLabel(d)}</span>)}</div></Section>
       <Section title="Evolução mensal" icon={BarChart3}><MiniBars dates={lastN(30)} data={s.xpByDate} /><p className="text-xs mt-2" style={{ color: C.muted }}>XP acumulado nos últimos 30 dias</p></Section>
+      <Section title="Esta semana vs. a passada" icon={TrendingUp}>
+        <div className="flex flex-col gap-3">
+          {comparativo.map(c => {
+            const dif = c.ag - c.an;
+            const cor = dif > 0 ? "#6EE7A8" : dif < 0 ? "#F0A66E" : C.muted;
+            const maior = Math.max(c.ag, c.an, 1);
+            return (
+              <div key={c.l}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm">{c.l}</span>
+                  <span className="text-xs font-bold" style={{ color: cor }}>{dif > 0 ? "+" : ""}{dif}</span>
+                </div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] w-14" style={{ color: C.gold }}>agora</span>
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${(c.ag / maior) * 100}%`, background: C.gold }} /></div>
+                  <span className="text-xs font-bold w-8 text-right">{c.ag}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] w-14" style={{ color: C.muted }}>passada</span>
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${(c.an / maior) * 100}%`, background: "rgba(212,175,55,0.35)" }} /></div>
+                  <span className="text-xs w-8 text-right" style={{ color: C.muted }}>{c.an}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title="Humor e energia" icon={Activity} right={temMood ? <span className="text-xs" style={{ color: C.muted }}>média {mediaDe("humor")} · {mediaDe("energia")}</span> : null}>
+        {!temMood ? (
+          <p className="text-sm leading-relaxed" style={{ color: C.muted }}>Registre como você está na aba Evoluir. Depois de alguns dias, o padrão aparece aqui.</p>
+        ) : (
+          <div>
+            <div className="flex items-end justify-between gap-1" style={{ height: 90 }}>
+              {dias14.map(d => {
+                const h = (mb[d] || {}).humor || 0;
+                const e = (mb[d] || {}).energia || 0;
+                return (
+                  <div key={d} className="flex-1 flex items-end justify-center gap-0.5" style={{ height: "100%" }}>
+                    <div className="rounded-sm" style={{ width: "42%", height: `${Math.max(3, (h / 5) * 100)}%`, background: h ? C.gold : C.cardL }} />
+                    <div className="rounded-sm" style={{ width: "42%", height: `${Math.max(3, (e / 5) * 100)}%`, background: e ? "rgba(212,175,55,0.40)" : C.cardL }} />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-4 mt-3">
+              <span className="text-[11px] flex items-center gap-1.5" style={{ color: C.muted }}><span style={{ width: 9, height: 9, borderRadius: 2, background: C.gold, display: "inline-block" }} />Humor</span>
+              <span className="text-[11px] flex items-center gap-1.5" style={{ color: C.muted }}><span style={{ width: 9, height: 9, borderRadius: 2, background: "rgba(212,175,55,0.40)", display: "inline-block" }} />Energia</span>
+              <span className="text-[11px] ml-auto" style={{ color: C.muted }}>últimos 14 dias</span>
+            </div>
+          </div>
+        )}
+      </Section>
       <div className="grid grid-cols-2 gap-3">
         <Card><div className="flex items-center gap-2 mb-2"><Scale size={16} style={{ color: C.gold }} /><span className="text-sm font-semibold">Peso</span></div><p className="text-2xl font-bold">{cw != null ? `${cw} kg` : "—"}</p><p className="text-xs mt-1" style={{ color: delta == null ? C.muted : delta < 0 ? "#6EE7A8" : delta > 0 ? "#F0A66E" : C.muted }}>{iw != null ? `Inicial ${iw} kg${delta != null ? ` · ${delta > 0 ? "+" : ""}${delta} kg` : ""}` : "Sem registro"}</p></Card>
         <Card><div className="flex items-center gap-2 mb-2"><Target size={16} style={{ color: C.gold }} /><span className="text-sm font-semibold">Meta</span></div><p className="text-lg font-bold">{goal ? `${goal.e} ${goal.t}` : "—"}</p><p className="text-xs mt-1" style={{ color: C.muted }}>{habitsDoneToday(s)}/6 hábitos · {waterToday(s)}/8 água</p></Card>
@@ -1341,11 +1389,14 @@ function AITab({ s, setS, award }) {
   );
 }
 
-function TrackTab({ s, update, award }) {
+function TrackTab({ s, update, award, fireToast }) {
   const t = today();
   const water = waterToday(s);
   const habitsDone = s.habits.date === t ? s.habits.done : {};
   const sleepH = sleepToday(s);
+  const md = moodToday(s);
+  const pend = pendentesHoje(s);
+  const score = vivonScore(s);
   const [wName, setWName] = useState(""); const [wMin, setWMin] = useState("");
   const [meal, setMeal] = useState(""); const [weight, setWeight] = useState("");
 
@@ -1356,18 +1407,149 @@ function TrackTab({ s, update, award }) {
   const logWorkout = () => { if (!wName.trim()) return; update(p => ({ workouts: [{ id: Date.now(), date: t, name: wName.trim(), min: wMin }, ...p.workouts] })); setWName(""); setWMin(""); award(50); };
   const logMeal = () => { if (!meal.trim()) return; update(p => ({ meals: [{ id: Date.now(), date: t, desc: meal.trim() }, ...p.meals] })); setMeal(""); award(20); };
   const logWeight = () => { if (!weight) return; update(p => ({ weights: [{ id: Date.now(), date: t, val: parseFloat(weight) }, ...p.weights] })); setWeight(""); award(10); };
+  const delWorkout = (id) => update(p => ({ workouts: p.workouts.filter(w => w.id !== id) }));
+  const delMeal = (id) => update(p => ({ meals: p.meals.filter(m => m.id !== id) }));
+  const delWeight = (id) => update(p => ({ weights: p.weights.filter(w => w.id !== id) }));
+
+  const setMood = (campo, valor) => {
+    const antes = md || { date: t, humor: 0, energia: 0 };
+    const novo = { ...antes, date: t, [campo]: valor };
+    const primeiraVez = !md;
+    update(p => ({ ...p, mood: novo, moodByDate: { ...(p.moodByDate || {}), [t]: { humor: novo.humor, energia: novo.energia } } }));
+    if (primeiraVez) award(10);
+  };
+
   const lastWeight = s.weights[0];
   const todayWorkouts = s.workouts.filter(w => w.date === t);
+  const todayMeals = s.meals.filter(m => m.date === t);
+  const todayWeights = s.weights.filter(w => w.date === t);
+
+  const diarioHoje = (s.diario && s.diario[t]) ? s.diario[t] : "";
+  const [verHistorico, setVerHistorico] = useState(false);
+  const diasComTexto = Object.keys(s.diario || {}).filter(d => d !== t && (s.diario[d] || "").trim()).sort().reverse().slice(0, 14);
+
+  const escreverDiario = (txt) => {
+    let ganhou = false;
+    update(p => {
+      const pago = p.diarioXp || [];
+      const merece = txt.trim().length >= 20 && !pago.includes(t);
+      if (merece) ganhou = true;
+      return { ...p, diario: { ...(p.diario || {}), [t]: txt }, diarioXp: merece ? [...pago, t] : pago };
+    });
+    if (ganhou) { award(15); if (fireToast) fireToast("📝 Dia registrado · +15 XP"); }
+  };
+
+  const CARINHAS = ["😞", "😕", "😐", "🙂", "😄"];
+  const RAIOS = ["🪫", "🔅", "🔆", "⚡", "🚀"];
+
+  const Escala = ({ opcoes, valor, onPick }) => (
+    <div className="flex gap-2">
+      {opcoes.map((emoji, i) => {
+        const n = i + 1;
+        const sel = valor === n;
+        return (
+          <button key={n} onClick={() => onPick(n)} className="flex-1 rounded-xl py-2.5 flex items-center justify-center"
+            style={{ background: sel ? "rgba(212,175,55,0.16)" : C.cardL, border: `1.5px solid ${sel ? C.gold : "transparent"}`, fontSize: 22, cursor: "pointer", opacity: sel || !valor ? 1 : 0.45, transition: "all .15s" }}>
+            {emoji}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const LinhaRegistro = ({ children, onDel }) => (
+    <div className="flex items-center gap-2 py-1.5">
+      <div className="flex-1 min-w-0">{children}</div>
+      <button onClick={onDel} aria-label="Apagar" style={{ background: "none", border: "none", cursor: "pointer", padding: 2, flexShrink: 0 }}><X size={14} style={{ color: C.muted }} /></button>
+    </div>
+  );
 
   return (
     <div className="px-5 pt-6 space-y-4">
       <h1 className="text-xl font-bold flex items-center gap-2"><Zap size={20} style={{ color: C.gold }} />Evoluir hoje</h1>
-      <Section title="Hidratação" icon={Droplet}><div className="flex items-center justify-between"><div className="flex items-center gap-1">{Array.from({ length: 8 }).map((_, i) => <Droplet key={i} size={20} style={{ color: i < water ? C.gold : C.cardL }} fill={i < water ? C.gold : "none"} />)}</div><div className="flex items-center gap-2"><RoundBtn onClick={() => setWater(water - 1)}><Minus size={16} /></RoundBtn><RoundBtn gold onClick={addWater}><Plus size={16} /></RoundBtn></div></div></Section>
+
+      {/* Fechar o dia */}
+      <Card style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(20,20,20,1))" }}>
+        <div className="flex items-center justify-between mb-3">
+          <span className="font-bold flex items-center gap-2"><Target size={17} style={{ color: C.gold }} />Fechar o dia</span>
+          <span className="text-sm font-bold" style={{ color: C.gold }}>{score}/100</span>
+        </div>
+        <div className="h-2 rounded-full overflow-hidden mb-3" style={{ background: C.cardL }}>
+          <div className="h-full rounded-full" style={{ width: `${score}%`, background: `linear-gradient(90deg, #EBCB6E, ${C.gold})`, transition: "width .4s" }} />
+        </div>
+        {pend.length === 0 ? (
+          <p className="text-sm font-semibold" style={{ color: C.gold }}>🏆 Dia fechado. Você pontuou tudo hoje.</p>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs font-bold mb-1" style={{ color: C.muted, letterSpacing: ".08em" }}>AINDA DÁ PRA PONTUAR</p>
+            {pend.map((p, i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ background: C.cardL }}>
+                <span className="text-sm" style={{ color: "#CFCFCF" }}>{p.t}</span>
+                <span className="text-xs font-bold" style={{ color: C.gold }}>+{p.pts}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Humor e energia */}
+      <Section title="Como você está hoje" icon={Activity} right={md ? <Check size={16} style={{ color: C.gold }} /> : <span className="text-xs font-bold" style={{ color: C.gold }}>+10 XP</span>}>
+        <p className="text-xs mb-2" style={{ color: C.muted }}>Humor</p>
+        <Escala opcoes={CARINHAS} valor={md ? md.humor : 0} onPick={v => setMood("humor", v)} />
+        <p className="text-xs mb-2 mt-4" style={{ color: C.muted }}>Energia</p>
+        <Escala opcoes={RAIOS} valor={md ? md.energia : 0} onPick={v => setMood("energia", v)} />
+        <p className="text-[11px] mt-3" style={{ color: C.muted }}>Com o tempo isso vira um gráfico no Painel — você começa a ver o que te derruba e o que te levanta.</p>
+      </Section>
+
+      <Section title="Hidratação" icon={Droplet} right={<span className="text-xs font-bold" style={{ color: water >= 8 ? C.gold : C.muted }}>{water}/8</span>}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">{Array.from({ length: 8 }).map((_, i) => <Droplet key={i} size={20} style={{ color: i < water ? C.gold : C.cardL }} fill={i < water ? C.gold : "none"} />)}</div>
+          <div className="flex items-center gap-2"><RoundBtn onClick={() => setWater(water - 1)}><Minus size={16} /></RoundBtn><RoundBtn gold onClick={addWater}><Plus size={16} /></RoundBtn></div>
+        </div>
+        {water > 8 ? <p className="text-xs mt-2 font-semibold" style={{ color: C.gold }}>+{water - 8} além da meta. Excelente.</p> : null}
+      </Section>
+
       <Section title="Sono" icon={Bed} right={<span className="font-bold" style={{ color: C.gold }}>{sleepH}h</span>}><div className="flex items-center gap-2"><RoundBtn onClick={() => setSleep(sleepH - 0.5)}><Minus size={16} /></RoundBtn><div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${Math.min(100, (sleepH / 8) * 100)}%`, background: C.gold }} /></div><RoundBtn gold onClick={() => setSleep(sleepH + 0.5)}><Plus size={16} /></RoundBtn></div><p className="text-xs mt-2" style={{ color: C.muted }}>Meta: 8 horas</p></Section>
-      <Section title="Hábitos do dia" icon={Check}><div className="grid grid-cols-2 gap-2">{HABITS.map(h => { const on = habitsDone[h.k]; return (<button key={h.k} onClick={() => toggleHabit(h.k)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition" style={{ background: on ? "rgba(212,175,55,0.12)" : C.cardL, border: `1px solid ${on ? C.gold : "transparent"}` }}><h.icon size={16} style={{ color: on ? C.gold : C.muted }} /><span style={{ color: on ? C.white : C.muted }} className="flex-1 text-left">{h.t}</span>{on && <Check size={15} style={{ color: C.gold }} />}</button>); })}</div></Section>
-      <Section title="Treino" icon={Dumbbell}><div className="flex gap-2 mb-2"><input value={wName} onChange={e => setWName(e.target.value)} placeholder="Ex: Peito e tríceps" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><input value={wMin} onChange={e => setWMin(e.target.value.replace(/[^0-9]/g, ""))} placeholder="min" inputMode="numeric" className="w-16 rounded-xl px-3 py-2.5 text-sm outline-none text-center" style={{ background: C.cardL, color: C.white }} /><RoundBtn gold onClick={logWorkout}><Plus size={16} /></RoundBtn></div>{todayWorkouts.map(w => <div key={w.id} className="flex items-center justify-between text-sm py-1.5"><span>{w.name}</span><span style={{ color: C.muted }}>{w.min ? `${w.min} min` : "✓"}</span></div>)}</Section>
-      <Section title="Alimentação" icon={Utensils}><div className="flex gap-2 mb-2"><input value={meal} onChange={e => setMeal(e.target.value)} placeholder="O que você comeu?" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><RoundBtn gold onClick={logMeal}><Plus size={16} /></RoundBtn></div>{s.meals.filter(m => m.date === t).map(m => <div key={m.id} className="text-sm py-1.5">{m.desc}</div>)}</Section>
-      <Section title="Peso" icon={Scale}><div className="flex gap-2 items-center"><input value={weight} onChange={e => setWeight(e.target.value.replace(/[^0-9.]/g, ""))} placeholder="kg" inputMode="decimal" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><RoundBtn gold onClick={logWeight}><Plus size={16} /></RoundBtn></div>{lastWeight && <p className="text-sm mt-2" style={{ color: C.muted }}>Último registro: <b style={{ color: C.white }}>{lastWeight.val} kg</b></p>}</Section>
+
+      <Section title="Hábitos do dia" icon={Check} right={<span className="text-xs font-bold" style={{ color: C.gold }}>{habitsDoneToday(s)}/{HABITS.length}</span>}><div className="grid grid-cols-2 gap-2">{HABITS.map(h => { const on = habitsDone[h.k]; return (<button key={h.k} onClick={() => toggleHabit(h.k)} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition" style={{ background: on ? "rgba(212,175,55,0.12)" : C.cardL, border: `1px solid ${on ? C.gold : "transparent"}` }}><h.icon size={16} style={{ color: on ? C.gold : C.muted }} /><span style={{ color: on ? C.white : C.muted }} className="flex-1 text-left">{h.t}</span>{on && <Check size={15} style={{ color: C.gold }} />}</button>); })}</div></Section>
+
+      <Section title="Treino" icon={Dumbbell}>
+        <div className="flex gap-2 mb-2"><input value={wName} onChange={e => setWName(e.target.value)} placeholder="Ex: Peito e tríceps" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><input value={wMin} onChange={e => setWMin(e.target.value.replace(/[^0-9]/g, ""))} placeholder="min" inputMode="numeric" className="w-16 rounded-xl px-3 py-2.5 text-sm outline-none text-center" style={{ background: C.cardL, color: C.white }} /><RoundBtn gold onClick={logWorkout}><Plus size={16} /></RoundBtn></div>
+        {todayWorkouts.map(w => <LinhaRegistro key={w.id} onDel={() => delWorkout(w.id)}><div className="flex items-center justify-between text-sm"><span>{w.name}</span><span style={{ color: C.muted }}>{w.min ? `${w.min} min` : "✓"}</span></div></LinhaRegistro>)}
+      </Section>
+
+      <Section title="Alimentação" icon={Utensils}>
+        <div className="flex gap-2 mb-2"><input value={meal} onChange={e => setMeal(e.target.value)} onKeyDown={e => { if (e.key === "Enter") logMeal(); }} placeholder="O que você comeu?" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><RoundBtn gold onClick={logMeal}><Plus size={16} /></RoundBtn></div>
+        {todayMeals.map(m => <LinhaRegistro key={m.id} onDel={() => delMeal(m.id)}><span className="text-sm">{m.desc}</span></LinhaRegistro>)}
+      </Section>
+
+      <Section title="Peso" icon={Scale}>
+        <div className="flex gap-2 items-center"><input value={weight} onChange={e => setWeight(e.target.value.replace(/[^0-9.]/g, ""))} onKeyDown={e => { if (e.key === "Enter") logWeight(); }} placeholder="kg" inputMode="decimal" className="flex-1 rounded-xl px-3 py-2.5 text-sm outline-none" style={{ background: C.cardL, color: C.white, minWidth: 0 }} /><RoundBtn gold onClick={logWeight}><Plus size={16} /></RoundBtn></div>
+        {todayWeights.map(w => <LinhaRegistro key={w.id} onDel={() => delWeight(w.id)}><span className="text-sm">{w.val} kg <span style={{ color: C.muted }}>· registrado hoje</span></span></LinhaRegistro>)}
+        {lastWeight && todayWeights.length === 0 ? <p className="text-sm mt-2" style={{ color: C.muted }}>Último registro: <b style={{ color: C.white }}>{lastWeight.val} kg</b> em {lastWeight.date.split("-").reverse().join("/")}</p> : null}
+      </Section>
+
+      <Section title="O que eu fiz hoje" icon={BookOpen} right={(s.diarioXp || []).includes(t) ? <Check size={16} style={{ color: C.gold }} /> : <span className="text-xs font-bold" style={{ color: C.gold }}>+15 XP</span>}>
+        <p className="text-xs mb-3" style={{ color: C.muted }}>Escreva do seu jeito. Vitória, treino, tropeço, o que veio.</p>
+        <textarea value={diarioHoje} onChange={e => escreverDiario(e.target.value)} rows={5} placeholder="Hoje eu..." className="w-full rounded-xl px-3 py-3 text-sm outline-none" style={{ background: C.cardL, color: C.white, border: "none", resize: "none", lineHeight: 1.6 }} />
+        {diasComTexto.length > 0 ? (
+          <button onClick={() => setVerHistorico(!verHistorico)} className="w-full mt-3 flex items-center justify-center gap-1.5 text-xs font-bold" style={{ background: "none", border: "none", color: C.gold, cursor: "pointer" }}>
+            {verHistorico ? "Esconder os dias anteriores" : `Ver os meus ${diasComTexto.length} dias registrados`}
+            <ChevronRight size={14} style={{ transform: verHistorico ? "rotate(90deg)" : "none", transition: "transform .2s" }} />
+          </button>
+        ) : null}
+        {verHistorico ? (
+          <div className="mt-3 flex flex-col gap-2">
+            {diasComTexto.map(d => (
+              <div key={d} className="rounded-xl px-3 py-2.5" style={{ background: C.cardL }}>
+                <p className="text-xs font-bold mb-1" style={{ color: C.gold }}>{d.split("-").reverse().join("/")}</p>
+                <p className="text-sm whitespace-pre-wrap" style={{ color: "#CFCFCF", lineHeight: 1.5 }}>{s.diario[d]}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </Section>
+
       <div className="h-2" />
     </div>
   );
