@@ -82,6 +82,14 @@ const GOALS = [
   { k: "disciplina", t: "Mais disciplina", e: "🎯" },
   { k: "performance", t: "Performance", e: "⚡" },
 ];
+const VOLTANDO = [
+  { k: "saude", t: "De um problema de saúde", e: "🏥" },
+  { k: "fundo", t: "De uma fase difícil", e: "🌧️" },
+  { k: "parado", t: "De muito tempo parado", e: "⏸️" },
+  { k: "eu", t: "De mim mesmo", e: "🪞" },
+  { k: "peso", t: "De um peso que ganhei", e: "⚖️" },
+  { k: "comecando", t: "Só estou começando", e: "🌱" },
+];
 const LEVELS = [
   { k: "iniciante", t: "Iniciante" },
   { k: "intermediario", t: "Intermediário" },
@@ -215,7 +223,6 @@ function buildWeeklyGoals(s) {
   return [
     { id: "wk_train", t: "Treine 4 vezes", icon: Dumbbell, cur: workoutsWeek, tgt: 4, xp: 80 },
     { id: "wk_active", t: "Fique ativo 5 dias", icon: Flame, cur: activeDays, tgt: 5, xp: 60 },
-    { id: "wk_xp", t: "Ganhe 300 XP na semana", icon: Zap, cur: xpWeek, tgt: 300, xp: 50 },
   ];
 }
 
@@ -347,9 +354,10 @@ const TREINOS = {
 
 const DEFAULT = {
   screen: "onboarding", obStep: 0,
-  profile: { name: "", goal: "manter", level: "iniciante", age: "", weight: "", height: "" },
+  profile: { name: "", goal: "manter", level: "iniciante", age: "", weight: "", height: "", voltando: "" },
   xp: 0, streak: 0, lastActive: "", xpByDate: {}, achievements: [], photos: [],
-  tab: "home",
+  voltas: 0, melhorSeq: 0, avisoVolta: "",
+  tab: "hoje",
   water: { date: "", count: 0 },
   sleep: { date: "", hours: 0 },
   habits: { date: "", done: {} },
@@ -546,7 +554,7 @@ function MetasTab({ s, update, award, fireToast }) {
       return { ...p, metasSemana: { week: wk, ids: [...cur, id], bonus: completa ? [...curB, area] : curB }, xp: p.xp + extra, xpByDate: extra ? { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + extra } : p.xpByDate };
     });
     award(xp);
-    if (completa && fireToast) fireToast(`🏆 Área ${area} completa! +50 XP de bônus`);
+    if (completa && fireToast) fireToast(`🏆 Você fechou a área ${area}`);
   };
 
   const addExtra = () => {
@@ -578,7 +586,7 @@ function MetasTab({ s, update, award, fireToast }) {
     update(p => ({ ...p, metasProprias: [...(p.metasProprias || []), nova] }));
     setNovaMeta("");
     setAbrirCriar(false);
-    if (fireToast) fireToast("Meta criada! Ela vale 25 XP.");
+    if (fireToast) fireToast("Meta criada.");
   };
 
   const removerMeta = (id) => {
@@ -618,7 +626,7 @@ function MetasTab({ s, update, award, fireToast }) {
           <button onClick={addExtra} className="rounded-xl px-3 flex items-center justify-center" style={{ background: C.gold, color: "#000", border: "none", cursor: "pointer" }}><Plus size={17} /></button>
         </div>
         {extras.length === 0 ? (
-          <p className="text-xs" style={{ color: C.muted }}>Escreva aqui as coisas que só valem para hoje. Cada uma concluída vale 10 XP.</p>
+          <p className="text-xs" style={{ color: C.muted }}>Escreva aqui as coisas que só valem para hoje.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {extras.map(x => (
@@ -735,7 +743,7 @@ function MetasTab({ s, update, award, fireToast }) {
       </div>
 
       <p className="text-xs text-center mt-6 leading-relaxed" style={{ color: C.muted }}>
-        {META_AREAS.length} áreas · {META_AREAS.reduce((n, a) => n + a.goals.length, 0)} metas semanais · completar uma área inteira vale +50 XP de bônus.
+        {META_AREAS.length} áreas · escolha só as que fizerem sentido pra você agora.
       </p>
     </div>
   );
@@ -773,34 +781,6 @@ function VivonApp() {
   }, [s]);
 
   useEffect(() => {
-    if (!s || s.screen !== "app") return;
-    const newly = ACHV.filter(a => !s.achievements.includes(a.id) && a.cond(s));
-    if (newly.length) {
-      setS(p => {
-        const t = today(); const bonus = newly.length * 50;
-        return { ...p, achievements: [...p.achievements, ...newly.map(a => a.id)], xp: p.xp + bonus, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + bonus } };
-      });
-      fireToast("🏆 " + newly.map(a => a.name).join(" · "));
-    }
-  }, [s]);
-
-  useEffect(() => {
-    if (!s || s.screen !== "app") return;
-    const t = today();
-    const claimed = s.missionsClaimed?.date === t ? s.missionsClaimed.ids : [];
-    const newly = buildMissions(s).filter(m => m.done && !claimed.includes(m.id));
-    if (newly.length) {
-      setS(p => {
-        const tt = today();
-        const cl = p.missionsClaimed?.date === tt ? p.missionsClaimed.ids : [];
-        const bonus = newly.reduce((a, m) => a + m.xp, 0);
-        return { ...p, xp: p.xp + bonus, xpByDate: { ...p.xpByDate, [tt]: (p.xpByDate[tt] || 0) + bonus }, missionsClaimed: { date: tt, ids: [...cl, ...newly.map(m => m.id)] } };
-      });
-      fireToast("✅ Missão concluída · +" + newly.reduce((a, m) => a + m.xp, 0) + " XP");
-    }
-  }, [s]);
-
-  useEffect(() => {
     if (!s || s.screen !== "app" || !s.notif || !s.notif.on) return;
     if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
     const t = today();
@@ -814,23 +794,6 @@ function VivonApp() {
     }
   }, [s]);
 
-  useEffect(() => {
-    if (!s || s.screen !== "app") return;
-    const wk = weekKey();
-    const claimed = s.weeklyGoals?.week === wk ? s.weeklyGoals.ids : [];
-    const newly = buildWeeklyGoals(s).filter(g => g.cur >= g.tgt && !claimed.includes(g.id));
-    if (newly.length) {
-      setS(p => {
-        const w2 = weekKey();
-        const cl = p.weeklyGoals?.week === w2 ? p.weeklyGoals.ids : [];
-        const t = today();
-        const bonus = newly.reduce((a, g) => a + g.xp, 0);
-        return { ...p, xp: p.xp + bonus, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + bonus }, weeklyGoals: { week: w2, ids: [...cl, ...newly.map(g => g.id)] } };
-      });
-      fireToast("🎯 Meta da semana batida · +" + newly.reduce((a, g) => a + g.xp, 0) + " XP");
-    }
-  }, [s]);
-
   function fireToast(msg) {
     setToast(msg);
     clearTimeout(toastTimer.current);
@@ -841,17 +804,18 @@ function VivonApp() {
   if (!access) return <AccessGate onUnlock={() => setAccess(true)} />;
 
   const award = (amount) => {
-    const before = s ? levelInfo(s.xp).level : 0;
-    const after = s ? levelInfo(s.xp + amount).level : 0;
-    const lvlUp = after > before;
-    try { if (navigator.vibrate) navigator.vibrate(lvlUp ? [0, 35, 30, 35] : 18); } catch (e) {}
-    playDing(lvlUp);
-    if (lvlUp) fireToast(`⬆️ Nível ${after}! Você evoluiu.`);
+    try { if (navigator.vibrate) navigator.vibrate(18); } catch (e) {}
+    playDing(false);
     setS(p => {
       const t = today(), y = yesterday();
-      let streak = p.streak, last = p.lastActive;
-      if (last !== t) { streak = last === y ? streak + 1 : 1; last = t; }
-      return { ...p, xp: p.xp + amount, lastActive: last, streak, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + amount } };
+      let streak = p.streak, last = p.lastActive, voltas = p.voltas || 0, melhor = p.melhorSeq || 0, aviso = p.avisoVolta || "";
+      if (last !== t) {
+        if (last && last !== y) { voltas = voltas + 1; aviso = t; streak = 1; }
+        else { streak = last === y ? streak + 1 : 1; }
+        last = t;
+      }
+      if (streak > melhor) melhor = streak;
+      return { ...p, xp: p.xp + amount, lastActive: last, streak, voltas, melhorSeq: melhor, avisoVolta: aviso, xpByDate: { ...p.xpByDate, [t]: (p.xpByDate[t] || 0) + amount } };
     });
   };
   const update = (patch) => setS(p => ({ ...p, ...(typeof patch === "function" ? patch(p) : patch) }));
@@ -865,9 +829,9 @@ function VivonApp() {
         {toast && (
           <div className="fixed left-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-semibold" style={{ top: 16, transform: "translateX(-50%)", background: C.gold, color: "#000", boxShadow: "0 8px 30px rgba(212,175,55,0.4)" }}>{toast}</div>
         )}
+        <TopBar s={s} update={update} />
         <div className="flex-1 overflow-y-auto pb-24">
-          {s.tab === "home" && <HomeTab s={s} update={update} />}
-          {s.tab === "track" && <TrackTab s={s} update={update} award={award} fireToast={fireToast} />}
+          {(s.tab === "hoje" || s.tab === "home" || s.tab === "track") && <HojeTab s={s} update={update} award={award} fireToast={fireToast} />}
           {s.tab === "treinos" && <TreinosTab update={update} award={award} fireToast={fireToast} />}
           {s.tab === "dash" && <DashboardTab s={s} setS={setS} />}
           {s.tab === "ai" && <AITab s={s} setS={setS} award={award} />}
@@ -920,14 +884,14 @@ function Onboarding({ s, update, award }) {
           <div className="flex flex-col items-center" style={{ gap: 18, animation: "vFade 1s ease both", animationDelay: ".18s" }}>
             <div className="flex items-center gap-3">
               <span style={{ height: 1, width: 30, background: `linear-gradient(90deg, transparent, ${C.gold})` }} />
-              <p style={{ color: C.gold, letterSpacing: "0.34em", fontSize: 11, fontWeight: 600 }}>EVOLUA TODOS OS DIAS</p>
+              <p style={{ color: C.gold, letterSpacing: "0.34em", fontSize: 11, fontWeight: 600 }}>UM DIA DE CADA VEZ</p>
               <span style={{ height: 1, width: 30, background: `linear-gradient(90deg, ${C.gold}, transparent)` }} />
             </div>
-            <p style={{ color: "#CFCFCF" }} className="text-lg max-w-[280px] leading-relaxed font-light">Corpo, mente, hábitos e disciplina em uma única plataforma movida por inteligência artificial.</p>
+            <p style={{ color: "#CFCFCF" }} className="text-lg max-w-[292px] leading-relaxed font-light">Pra quem está voltando de alguma coisa e não tem ninguém pra dizer por onde começar.</p>
           </div>
         </div>
         <div style={{ animation: "vFade .7s ease both" }}>
-          <Btn onClick={next}>Começar minha evolução <ArrowRight size={18} /></Btn>
+          <Btn onClick={next}>Começar <ArrowRight size={18} /></Btn>
           <p className="text-center text-xs mt-4" style={{ color: C.muted }}>Leva menos de 1 minuto.</p>
         </div>
       </Wrap>
@@ -944,6 +908,20 @@ function Onboarding({ s, update, award }) {
         <div>
           <label className="text-xs font-bold" style={{ color: C.muted, letterSpacing: ".1em" }}>SEU NOME</label>
           <input value={p.name || ""} onChange={(e) => set("name", e.target.value)} placeholder="Como quer ser chamado?" style={{ width: "100%", background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "13px 16px", color: C.white, fontSize: 16, outline: "none", marginTop: 8 }} />
+        </div>
+        <div>
+          <label className="text-xs font-bold" style={{ color: C.muted, letterSpacing: ".1em" }}>DE ONDE VOCÊ ESTÁ VOLTANDO?</label>
+          <div className="grid grid-cols-2 gap-2" style={{ marginTop: 8 }}>
+            {VOLTANDO.map(v => {
+              const sel = p.voltando === v.k;
+              return (
+                <button key={v.k} onClick={() => set("voltando", v.k)} className="rounded-2xl px-3 py-3 text-left flex items-center gap-2" style={{ background: sel ? "rgba(212,175,55,0.12)" : C.card, border: `1.5px solid ${sel ? C.gold : C.border}`, color: C.white, cursor: "pointer" }}>
+                  <span style={{ fontSize: 18 }}>{v.e}</span><span className="font-semibold text-[13px] leading-tight">{v.t}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] mt-2 leading-relaxed" style={{ color: C.muted }}>Isso fica só com você. Serve pra IA entender seu ponto de partida.</p>
         </div>
         <div>
           <label className="text-xs font-bold" style={{ color: C.muted, letterSpacing: ".1em" }}>SEU OBJETIVO</label>
@@ -1018,76 +996,70 @@ function FirstSteps({ s }) {
     </div>
   );
 }
-function HomeTab({ s, update }) {
-  const li = levelInfo(s.xp);
+function VoltaCard({ s, update }) {
+  if (!s.avisoVolta || s.avisoVolta !== today()) return null;
+  return (
+    <div className="rounded-2xl p-4 mb-4" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.14), rgba(20,20,20,1))", border: `1px solid ${C.gold}` }}>
+      <div className="flex items-start gap-3">
+        <div className="rounded-xl p-2" style={{ background: "rgba(212,175,55,0.18)" }}><Rocket size={18} style={{ color: C.gold }} /></div>
+        <div className="flex-1">
+          <p className="font-bold mb-1">Você voltou.</p>
+          <p className="text-xs leading-relaxed" style={{ color: "#E8DCC0" }}>Ficou um tempo fora e voltou mesmo assim. É isso que conta — não a sequência perfeita. Essa é a sua <b style={{ color: C.gold }}>{s.voltas}ª volta</b>.</p>
+        </div>
+        <button onClick={() => update({ avisoVolta: "" })}><X size={16} style={{ color: C.muted }} /></button>
+      </div>
+    </div>
+  );
+}
+
+function MetasDoDia({ s, update, award }) {
+  const t = today();
+  const done = (s.metasDia && s.metasDia.date === t) ? s.metasDia.ids : [];
+  const toggle = (id) => {
+    const on = !done.includes(id);
+    update({ metasDia: { date: t, ids: on ? [...done, id] : done.filter(x => x !== id) } });
+    if (on) award(10);
+  };
+  return (
+    <Section title="O que eu faço hoje" icon={Target} right={<span className="text-xs font-semibold" style={{ color: C.gold }}>{done.length}/{META_DIA.length}</span>}>
+      <div className="flex flex-col gap-2">
+        {META_DIA.map(m => {
+          const on = done.includes(m.id);
+          return (
+            <button key={m.id} onClick={() => toggle(m.id)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-left" style={{ background: on ? "rgba(212,175,55,0.10)" : C.cardL, border: `1px solid ${on ? C.border : "transparent"}` }}>
+              <m.icon size={16} style={{ color: on ? C.gold : C.muted }} />
+              <span className="flex-1 text-sm" style={{ color: on ? C.white : "#CFCFCF", textDecoration: on ? "line-through" : "none" }}>{m.t}</span>
+              {on ? <Check size={16} style={{ color: C.gold }} /> : <div style={{ width: 16, height: 16, borderRadius: 5, border: `1.5px solid ${C.muted}` }} />}
+            </button>
+          );
+        })}
+      </div>
+      <button onClick={() => update({ tab: "metas" })} className="w-full mt-3 rounded-xl py-2.5 text-sm font-semibold" style={{ background: "transparent", border: `1px solid ${C.border}`, color: C.gold }}>Escolher outras metas</button>
+    </Section>
+  );
+}
+
+function HojeTab({ s, update, award, fireToast }) {
   const hour = new Date().getHours();
   const greet = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-  const phrase = PHRASES[new Date().getDate() % PHRASES.length];
   const score = vivonScore(s);
-  const missions = buildMissions(s);
-  const doneMissions = missions.filter(m => m.done).length;
-  const [dismissed, setDismissed] = useState(false);
-
-  const nudges = [];
-  if (waterToday(s) < 8 && hour >= 11) nudges.push(`${s.profile.name || "Você"}, ainda não bateu sua meta de água hoje.`);
-  if (li.need - li.current <= 40) nudges.push(`Faltam ${li.need - li.current} XP para o nível ${li.level + 1}.`);
-  if (s.lastActive !== today()) nudges.push("Mantenha sua sequência viva: registre algo hoje.");
-  if (!workoutToday(s) && hour >= 16) nudges.push("Que tal um treino rápido antes de fechar o dia?");
-  const nudge = nudges[0];
-
   return (
-    <div className="px-5 pt-6">
-      <div className="flex items-center justify-between mb-5">
-        <Logo size={22} />
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: C.card, border: `1px solid ${C.border}` }}><Flame size={15} style={{ color: C.gold }} /><span className="text-sm font-bold">{s.streak}</span></div>
+    <div>
+      <div className="px-5 pt-4">
+        <p style={{ color: C.muted }} className="text-sm">{greet},</p>
+        <h1 className="text-2xl font-bold mb-4">{s.profile.name || "atleta"} 👋</h1>
+        <VoltaCard s={s} update={update} />
+        <FirstSteps s={s} />
+        <Card className="mb-4 flex items-center gap-4" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(20,20,20,1))" }}>
+          <ScoreRing value={score} size={104} />
+          <div className="flex-1">
+            <p className="text-sm font-semibold mb-1" style={{ color: C.gold }}>Seu dia até agora</p>
+            <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{score >= 85 ? "Dia fechado. Continue assim." : score >= 60 ? "Bom ritmo. Dá pra fechar mais alto." : score >= 30 ? "Você começou. Já vale." : "Um ponto já muda o dia. Começa por um."}</p>
+          </div>
+        </Card>
+        <MetasDoDia s={s} update={update} award={award} />
       </div>
-      <FirstSteps s={s} />
-      <p style={{ color: C.muted }} className="text-sm">{greet},</p>
-      <h1 className="text-2xl font-bold mb-4">{s.profile.name || "atleta"} 👋</h1>
-
-      {nudge && !dismissed && (
-        <div className="rounded-2xl p-3.5 mb-4 flex items-start gap-3" style={{ background: "rgba(212,175,55,0.10)", border: `1px solid ${C.border}` }}>
-          <Bell size={17} style={{ color: C.gold, marginTop: 2 }} /><p className="text-sm flex-1" style={{ color: "#E8DCC0" }}>{nudge}</p><button onClick={() => setDismissed(true)}><X size={16} style={{ color: C.muted }} /></button>
-        </div>
-      )}
-
-      <Card className="mb-4 flex items-center gap-4" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(20,20,20,1))" }}>
-        <ScoreRing value={score} size={108} />
-        <div className="flex-1">
-          <p className="text-sm font-semibold mb-1" style={{ color: C.gold }}>Seu Score VIVON de hoje</p>
-          <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{score >= 85 ? "Dia impecável. Continue assim." : score >= 60 ? "Bom ritmo. Dá pra fechar mais alto." : score >= 30 ? "Você começou. Vamos somar mais pontos." : "Bora pontuar o primeiro ponto do dia."}</p>
-        </div>
-      </Card>
-
-      <Card className="mb-4">
-        <div className="flex items-center justify-between mb-2"><div className="flex items-center gap-2"><Crown size={18} style={{ color: C.gold }} /><span className="font-bold">Nível {li.level}</span></div><span className="text-sm font-semibold" style={{ color: C.gold }}>{s.xp} XP</span></div>
-        <div className="h-2.5 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${li.pct}%`, background: C.gold }} /></div>
-        <p className="text-xs mt-2" style={{ color: C.muted }}>{li.current} / {li.need} XP para o nível {li.level + 1}</p>
-      </Card>
-
-      <Section title="Missões do dia" icon={Target} right={<span className="text-xs font-semibold" style={{ color: C.gold }}>{doneMissions}/{missions.length}</span>}>
-        <div className="flex flex-col gap-2">
-          {missions.map(m => (
-            <div key={m.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: m.done ? "rgba(212,175,55,0.10)" : C.cardL }}>
-              <m.icon size={16} style={{ color: m.done ? C.gold : C.muted }} /><span className="flex-1 text-sm" style={{ color: m.done ? C.white : "#CFCFCF" }}>{m.t}</span><span className="text-xs font-semibold" style={{ color: m.done ? C.gold : C.muted }}>+{m.xp}</span>{m.done ? <Check size={15} style={{ color: C.gold }} /> : <div style={{ width: 15 }} />}
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <button onClick={() => update({ tab: "treinos" })} className="w-full mt-4 rounded-2xl p-4 flex items-center gap-3 text-left" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(20,20,20,1))", border: `1px solid ${C.border}` }}>
-        <div className="rounded-xl p-2.5" style={{ background: "rgba(212,175,55,0.15)" }}><Dumbbell size={20} style={{ color: C.gold }} /></div>
-        <div className="flex-1"><p className="font-bold">Treinos em vídeo</p><p className="text-xs" style={{ color: C.muted }}>Execução de cada exercício · masculino e feminino</p></div>
-        <ChevronRight size={18} style={{ color: C.muted }} />
-      </button>
-
-      {s.challenge && <div className="mt-4"><ChallengeCard s={s} update={update} compact /></div>}
-
-      <div className="rounded-2xl p-4 my-4" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(212,175,55,0.02))", border: `1px solid ${C.border}` }}><p className="text-sm italic leading-relaxed" style={{ color: "#E8DCC0" }}>"{phrase}"</p></div>
-
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <Stat icon={Droplet} v={`${waterToday(s)}/8`} l="Água" /><Stat icon={Check} v={`${habitsDoneToday(s)}/6`} l="Hábitos" /><Stat icon={Dumbbell} v={s.workouts.filter(w => w.date === today()).length} l="Treinos" />
-      </div>
+      <TrackTab s={s} update={update} award={award} fireToast={fireToast} />
     </div>
   );
 }
@@ -1138,7 +1110,7 @@ function GuidedWorkout({ group, onClose, onFinish }) {
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
           <Trophy size={56} style={{ color: C.gold }} />
           <h2 className="text-2xl font-bold mt-4 mb-2">Treino concluído!</h2>
-          <p className="text-sm" style={{ color: C.muted }}>Você completou {exs.length} exercícios de {group.group}. +30 XP</p>
+          <p className="text-sm" style={{ color: C.muted }}>Você completou {exs.length} exercícios de {group.group}.</p>
         </div>
       )}
 
@@ -1164,7 +1136,7 @@ function TreinosTab({ update, award, fireToast }) {
   const finishWorkout = (groupName) => {
     update(p => ({ workouts: [{ id: Date.now(), date: today(), name: groupName }, ...p.workouts] }));
     award(30);
-    if (fireToast) fireToast("💪 Treino registrado · +30 XP");
+    if (fireToast) fireToast("💪 Treino registrado");
   };
   const groups = TREINOS[gender];
   const totalEx = groups.reduce((a, g) => a + g.exercises.length, 0);
@@ -1224,7 +1196,6 @@ function ExerciseRow({ ex, gender }) {
 }
 
 function DashboardTab({ s, setS }) {
-  const li = levelInfo(s.xp);
   const score = vivonScore(s);
   const cw = currentWeight(s), iw = startWeight(s);
   const delta = cw != null && iw != null ? +(cw - iw).toFixed(1) : null;
@@ -1237,7 +1208,7 @@ function DashboardTab({ s, setS }) {
   const contaTreinos = ds => (s.workouts || []).filter(w => ds.includes(w.date)).length;
   const contaAtivos = ds => ds.filter(d => (s.xpByDate[d] || 0) > 0).length;
   const comparativo = [
-    { l: "XP", ag: somaXp(semAtual), an: somaXp(semPassada) },
+    { l: "Atividade", ag: somaXp(semAtual), an: somaXp(semPassada) },
     { l: "Treinos", ag: contaTreinos(semAtual), an: contaTreinos(semPassada) },
     { l: "Dias ativos", ag: contaAtivos(semAtual), an: contaAtivos(semPassada) },
   ];
@@ -1251,7 +1222,7 @@ function DashboardTab({ s, setS }) {
 
   const analyze = async () => {
     setAnalyzing(true);
-    const data = `Dados do usuário ${s.profile.name}: objetivo ${goal?.t || "—"}, nível ${li.level}, ${s.xp} XP, sequência ${s.streak} dias, score de hoje ${score}/100, consistência semanal ${cons}%, peso inicial ${iw ?? "—"}kg, peso atual ${cw ?? "—"}kg (variação ${delta ?? "—"}kg), ${s.workouts.length} treinos registrados, ${totalAi(s)} conversas com a IA, hábitos hoje ${habitsDoneToday(s)}/6, água hoje ${waterToday(s)}/8 copos.`;
+    const data = `Dados do usuário ${s.profile.name}: objetivo ${goal?.t || "—"}, está voltando de "${(VOLTANDO.find(v => v.k === s.profile.voltando) || {}).t || "—"}", sequência ${s.streak} dias, já voltou ${s.voltas || 0} vezes depois de parar, score de hoje ${score}/100, consistência semanal ${cons}%, peso inicial ${iw ?? "—"}kg, peso atual ${cw ?? "—"}kg (variação ${delta ?? "—"}kg), ${s.workouts.length} treinos registrados, ${totalAi(s)} conversas com a IA, hábitos hoje ${habitsDoneToday(s)}/6, água hoje ${waterToday(s)}/8 copos.`;
     try {
       const res = await fetch(AI_ENDPOINT, {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -1271,9 +1242,9 @@ function DashboardTab({ s, setS }) {
         <ScoreRing value={score} size={120} />
         <div className="flex-1 space-y-1.5">{scoreParts(s).map(p => (<div key={p.l} className="flex items-center gap-2"><span className="text-xs w-20" style={{ color: C.muted }}>{p.l}</span><div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${(p.v / p.m) * 100}%`, background: C.gold }} /></div></div>))}</div>
       </Card>
-      <div className="grid grid-cols-4 gap-2"><Stat icon={Crown} v={li.level} l="Nível" /><Stat icon={Zap} v={s.xp} l="XP" /><Stat icon={Flame} v={s.streak} l="Seq." /><Stat icon={Activity} v={`${cons}%`} l="Consist." /></div>
+      <div className="grid grid-cols-4 gap-2"><Stat icon={Rocket} v={s.voltas || 0} l="Voltas" /><Stat icon={Flame} v={s.streak} l="Seguidos" /><Stat icon={TrendingUp} v={s.melhorSeq || 0} l="Melhor" /><Stat icon={Activity} v={`${cons}%`} l="Consist." /></div>
       <Section title="Evolução semanal" icon={TrendingUp}><MiniBars dates={lastN(7)} data={s.xpByDate} /><div className="flex justify-between mt-1">{lastN(7).map(d => <span key={d} className="text-[10px] flex-1 text-center" style={{ color: d === today() ? C.gold : C.muted }}>{dayLabel(d)}</span>)}</div></Section>
-      <Section title="Evolução mensal" icon={BarChart3}><MiniBars dates={lastN(30)} data={s.xpByDate} /><p className="text-xs mt-2" style={{ color: C.muted }}>XP acumulado nos últimos 30 dias</p></Section>
+      <Section title="Evolução mensal" icon={BarChart3}><MiniBars dates={lastN(30)} data={s.xpByDate} /><p className="text-xs mt-2" style={{ color: C.muted }}>Sua atividade nos últimos 30 dias</p></Section>
       <Section title="Esta semana vs. a passada" icon={TrendingUp}>
         <div className="flex flex-col gap-3">
           {comparativo.map(c => {
@@ -1356,7 +1327,7 @@ function AITab({ s, setS, award }) {
     const g = GOALS.find(x => x.k === p.goal)?.t || "—";
     const l = LEVELS.find(x => x.k === p.level)?.t || "—";
     const recent = s.workouts.slice(0, 3).map(w => w.name).join(", ") || "nenhum";
-    return `Contexto real do usuário (use para personalizar): nome ${p.name || "—"}, objetivo ${g}, nível de treino ${l}, idade ${p.age || "—"}, peso atual ${currentWeight(s) ?? "—"}kg, peso inicial ${startWeight(s) ?? "—"}kg, sequência ${s.streak} dias, nível VIVON ${levelInfo(s.xp).level}, score hoje ${vivonScore(s)}/100, treinos recentes: ${recent}, hábitos hoje ${habitsDoneToday(s)}/6. Responda em português do Brasil, objetivo e premium.`;
+    return `Contexto real do usuário (use para personalizar): nome ${p.name || "—"}, objetivo ${g}, nível de treino ${l}, idade ${p.age || "—"}, peso atual ${currentWeight(s) ?? "—"}kg, peso inicial ${startWeight(s) ?? "—"}kg, sequência ${s.streak} dias, está voltando de "${(VOLTANDO.find(v => v.k === p.voltando) || {}).t || "—"}", já voltou ${s.voltas || 0} vezes depois de parar, score hoje ${vivonScore(s)}/100, treinos recentes: ${recent}, hábitos hoje ${habitsDoneToday(s)}/6. Responda em português do Brasil, objetivo e premium.`;
   };
 
   const send = async (preset) => {
@@ -1443,7 +1414,7 @@ function TrackTab({ s, update, award, fireToast }) {
       if (merece) ganhou = true;
       return { ...p, diario: { ...(p.diario || {}), [t]: txt }, diarioXp: merece ? [...pago, t] : pago };
     });
-    if (ganhou) { award(15); if (fireToast) fireToast("📝 Dia registrado · +15 XP"); }
+    if (ganhou) { award(15); if (fireToast) fireToast("📝 Dia registrado"); }
   };
 
   const CARINHAS = ["😞", "😕", "😐", "🙂", "😄"];
@@ -1500,7 +1471,7 @@ function TrackTab({ s, update, award, fireToast }) {
       </Card>
 
       {/* Humor e energia */}
-      <Section title="Como você está hoje" icon={Activity} right={md ? <Check size={16} style={{ color: C.gold }} /> : <span className="text-xs font-bold" style={{ color: C.gold }}>+10 XP</span>}>
+      <Section title="Como você está hoje" icon={Activity} right={md ? <Check size={16} style={{ color: C.gold }} /> : <span className="text-xs" style={{ color: C.muted }}>toque pra marcar</span>}>
         <p className="text-xs mb-2" style={{ color: C.muted }}>Humor</p>
         <Escala opcoes={CARINHAS} valor={md ? md.humor : 0} onPick={v => setMood("humor", v)} />
         <p className="text-xs mb-2 mt-4" style={{ color: C.muted }}>Energia</p>
@@ -1536,7 +1507,7 @@ function TrackTab({ s, update, award, fireToast }) {
         {lastWeight && todayWeights.length === 0 ? <p className="text-sm mt-2" style={{ color: C.muted }}>Último registro: <b style={{ color: C.white }}>{lastWeight.val} kg</b> em {lastWeight.date.split("-").reverse().join("/")}</p> : null}
       </Section>
 
-      <Section title="O que eu fiz hoje" icon={BookOpen} right={(s.diarioXp || []).includes(t) ? <Check size={16} style={{ color: C.gold }} /> : <span className="text-xs font-bold" style={{ color: C.gold }}>+15 XP</span>}>
+      <Section title="O que eu fiz hoje" icon={BookOpen} right={(s.diarioXp || []).includes(t) ? <Check size={16} style={{ color: C.gold }} /> : <span className="text-xs" style={{ color: C.muted }}>escreva livre</span>}>
         <p className="text-xs mb-3" style={{ color: C.muted }}>Escreva do seu jeito. Vitória, treino, tropeço, o que veio.</p>
         <textarea value={diarioHoje} onChange={e => escreverDiario(e.target.value)} rows={5} placeholder="Hoje eu..." className="w-full rounded-xl px-3 py-3 text-sm outline-none" style={{ background: C.cardL, color: C.white, border: "none", resize: "none", lineHeight: 1.6 }} />
         {diasComTexto.length > 0 ? (
@@ -1576,7 +1547,7 @@ function ChallengeCard({ s, update, compact }) {
       <div className="flex items-center justify-between mb-2"><span className="font-bold flex items-center gap-2"><Rocket size={17} style={{ color: C.gold }} />Desafio {def.t}</span><span className="text-sm font-semibold" style={{ color: C.gold }}>{done}/{def.days}</span></div>
       <div className="h-2 rounded-full overflow-hidden mb-3" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: C.gold }} /></div>
       {!compact && <div className="flex flex-wrap gap-1.5 mb-3">{Array.from({ length: def.days }).map((_, i) => <div key={i} className="rounded" style={{ width: 14, height: 14, background: i < done ? C.gold : C.cardL }} />)}</div>}
-      <div className="flex gap-2"><button onClick={mark} disabled={todayDone} className="flex-1 rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-1.5" style={{ background: todayDone ? C.cardL : C.gold, color: todayDone ? C.muted : "#000" }}>{todayDone ? <><Check size={15} /> Dia concluído</> : <>Concluir hoje +40 XP</>}</button>{!compact && <button onClick={quit} className="rounded-xl px-3" style={{ background: C.cardL, color: C.muted }}><X size={16} /></button>}</div>
+      <div className="flex gap-2"><button onClick={mark} disabled={todayDone} className="flex-1 rounded-xl py-2.5 text-sm font-bold flex items-center justify-center gap-1.5" style={{ background: todayDone ? C.cardL : C.gold, color: todayDone ? C.muted : "#000" }}>{todayDone ? <><Check size={15} /> Dia concluído</> : <>Concluir hoje</>}</button>{!compact && <button onClick={quit} className="rounded-xl px-3" style={{ background: C.cardL, color: C.muted }}><X size={16} /></button>}</div>
     </Card>
   );
 }
@@ -1590,31 +1561,21 @@ function ProfileTab({ s, update, award, fireToast }) {
     window.addEventListener("pwa-installed", off);
     return () => { window.removeEventListener("pwa-available", on); window.removeEventListener("pwa-installed", off); };
   }, []);
-  if (view === "achievements") return <Panel title="Conquistas" onBack={() => setView("hub")}><Achievements s={s} /></Panel>;
-  if (view === "levels") return <Panel title="Níveis & Recompensas" onBack={() => setView("hub")}><LevelsView s={s} /></Panel>;
-  if (view === "challenges") return <Panel title="Desafios" onBack={() => setView("hub")}><ChallengesView s={s} update={update} /></Panel>;
-  if (view === "library") return <Panel title="Biblioteca Premium" onBack={() => setView("hub")}><LibraryView s={s} fireToast={fireToast} /></Panel>;
+  if (view === "library") return <Panel title="Guias da VIVON" onBack={() => setView("hub")}><LibraryView s={s} fireToast={fireToast} /></Panel>;
   if (view === "edit") return <Panel title="Editar perfil" onBack={() => setView("hub")}><EditProfile s={s} update={update} fireToast={fireToast} onDone={() => setView("hub")} /></Panel>;
   if (view === "backup") return <Panel title="Backup dos meus dados" onBack={() => setView("hub")}><BackupView s={s} update={update} fireToast={fireToast} /></Panel>;
   if (view === "photos") return <Panel title="Fotos de progresso" onBack={() => setView("hub")}><PhotosView s={s} update={update} fireToast={fireToast} /></Panel>;
   if (view === "share") return <Panel title="Compartilhar evolução" onBack={() => setView("hub")}><ShareCardView s={s} fireToast={fireToast} /></Panel>;
-  if (view === "week") return <Panel title="Resumo da semana" onBack={() => setView("hub")}><WeeklySummaryView s={s} /></Panel>;
   if (view === "weight") return <Panel title="Histórico de peso" onBack={() => setView("hub")}><WeightChartView s={s} /></Panel>;
-  if (view === "goals") return <Panel title="Metas da semana" onBack={() => setView("hub")}><WeeklyGoalsView s={s} /></Panel>;
 
-  const li = levelInfo(s.xp);
   const g = GOALS.find(x => x.k === s.profile.goal);
   const items = [
     { k: "edit", t: "Editar perfil", icon: User, sub: "Nome, objetivo e dados" },
-    { k: "backup", t: "Backup dos meus dados", icon: Copy, sub: "Exportar e importar" },
     { k: "photos", t: "Fotos de progresso", icon: Activity, sub: "Seu antes e depois" },
+    { k: "library", t: "Guias da VIVON", icon: BookOpen, sub: "Feitos pra você" },
     { k: "share", t: "Compartilhar evolução", icon: Sparkles, sub: "Imagem pro Instagram" },
-    { k: "week", t: "Resumo da semana", icon: BarChart3, sub: "Seus últimos 7 dias" },
     { k: "weight", t: "Histórico de peso", icon: Scale, sub: "Gráfico de evolução" },
-    { k: "achievements", t: "Conquistas", icon: Award, sub: `${s.achievements.length}/${ACHV.length}` },
-    { k: "levels", t: "Níveis & Recompensas", icon: Crown, sub: `Nível ${li.level}` },
-    { k: "challenges", t: "Desafios", icon: Rocket, sub: s.challenge ? "Em andamento" : "Começar" },
-    { k: "library", t: "Biblioteca Premium", icon: BookOpen, sub: "5 categorias" },
+    { k: "backup", t: "Backup dos meus dados", icon: Copy, sub: "Exportar e importar" },
   ];
   const reset = () => { if (confirm("Isso vai apagar todo o seu progresso. Tem certeza?")) { try { localStorage.setItem("vivon-state", JSON.stringify(DEFAULT)); } catch {} update(() => ({ ...DEFAULT })); } };
 
@@ -1625,7 +1586,7 @@ function ProfileTab({ s, update, award, fireToast }) {
         <h1 className="text-xl font-bold">{s.profile.name || "Atleta VIVON"}</h1>
         <p style={{ color: C.muted }} className="text-sm">{g ? `${g.e} ${g.t}` : "—"}</p>
       </div>
-      <div className="grid grid-cols-3 gap-3"><Stat icon={Crown} v={li.level} l="Nível" /><Stat icon={Zap} v={s.xp} l="XP total" /><Stat icon={Flame} v={s.streak} l="Sequência" /></div>
+      <div className="grid grid-cols-3 gap-3"><Stat icon={Rocket} v={s.voltas || 0} l="Voltas" /><Stat icon={Flame} v={s.streak} l="Dias seguidos" /><Stat icon={TrendingUp} v={s.melhorSeq || 0} l="Melhor" /></div>
       {canInstall ? (
         <button onClick={() => window.__pwaInstall && window.__pwaInstall()} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: `linear-gradient(180deg, #EBCB6E, ${C.gold})`, color: "#000", border: "none", cursor: "pointer" }}>
           <Rocket size={18} /><span className="font-bold flex-1 text-left">Instalar o app no celular</span><ChevronRight size={18} />
@@ -1643,7 +1604,7 @@ function WeeklyGoalsView({ s }) {
   const claimed = s.weeklyGoals?.week === wk ? s.weeklyGoals.ids : [];
   return (
     <div className="space-y-4">
-      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>Suas metas desta semana. Bater cada uma dá XP. Elas renovam toda segunda-feira.</p>
+      <p className="text-sm leading-relaxed" style={{ color: C.muted }}>Suas metas desta semana. Elas renovam toda segunda-feira.</p>
       {goals.map(g => {
         const done = g.cur >= g.tgt || claimed.includes(g.id);
         const pct = Math.min(100, Math.round((g.cur / g.tgt) * 100));
@@ -1651,7 +1612,7 @@ function WeeklyGoalsView({ s }) {
           <div key={g.id} className="rounded-2xl px-4 py-4" style={{ background: C.card, border: `1px solid ${done ? C.gold : C.border}` }}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2"><g.icon size={18} style={{ color: C.gold }} /><span className="font-semibold">{g.t}</span></div>
-              {done ? <Check size={18} style={{ color: C.gold }} /> : <span className="text-xs font-bold" style={{ color: C.gold }}>+{g.xp} XP</span>}
+              {done ? <Check size={18} style={{ color: C.gold }} /> : null}
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ background: C.cardL }}><div className="h-full rounded-full" style={{ width: `${pct}%`, background: C.gold }} /></div>
             <p className="text-xs mt-1.5" style={{ color: C.muted }}>{Math.min(g.cur, g.tgt)}/{g.tgt}{done ? " · concluída" : ""}</p>
@@ -1677,13 +1638,13 @@ function WeeklySummaryView({ s }) {
     <div className="space-y-5">
       <p className="text-sm leading-relaxed" style={{ color: C.muted }}>O que você fez nos últimos 7 dias. Feche a semana com orgulho e comece a próxima com tudo.</p>
       <div className="grid grid-cols-2 gap-3">
-        <Item icon={Zap} v={xpWeek} l="XP na semana" />
+        <Item icon={Activity} v={xpWeek} l="Atividade" />
         <Item icon={Flame} v={s.streak} l="Sequência" />
         <Item icon={Check} v={`${activeDays}/7`} l="Dias ativos" />
         <Item icon={Dumbbell} v={workoutsWeek} l="Treinos" />
       </div>
       <div className="rounded-2xl px-4 py-4" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-        <p className="text-xs font-bold mb-3" style={{ color: C.muted, letterSpacing: ".1em" }}>XP POR DIA</p>
+        <p className="text-xs font-bold mb-3" style={{ color: C.muted, letterSpacing: ".1em" }}>ATIVIDADE POR DIA</p>
         <MiniBars dates={days} data={s.xpByDate} />
         <div className="flex justify-between mt-1">{days.map(d => <span key={d} className="text-[10px] flex-1 text-center" style={{ color: d === today() ? C.gold : C.muted }}>{dayLabel(d)}</span>)}</div>
       </div>
@@ -1797,8 +1758,7 @@ function ShareCardView({ s, fireToast }) {
     ctx.fillStyle = "#FFFFFF"; ctx.font = "800 180px system-ui, sans-serif"; ctx.fillText(String(score), cx, cy + 52);
     ctx.fillStyle = "#8A8A8A"; ctx.font = "600 36px system-ui, sans-serif"; ctx.fillText("VIVON SCORE", cx, cy + 150);
 
-    const li = levelInfo(s.xp);
-    const stats = [["NÍVEL", String(li.level)], ["SEQUÊNCIA", s.streak + "d"], ["XP", String(s.xp)]];
+    const stats = [["VOLTAS", String(s.voltas || 0)], ["SEGUIDOS", s.streak + "d"], ["MELHOR", (s.melhorSeq || 0) + "d"]];
     const baseY = 1280;
     stats.forEach((st, i) => {
       const x = W / 2 + (i - 1) * 310;
@@ -2027,41 +1987,41 @@ function ChallengesView({ s, update }) { const start = (k) => update({ challenge
 function LibraryView({ s, fireToast }) { const cats = Object.keys(LIBRARY); const [cat, setCat] = useState(cats[0]); const li = levelInfo(s.xp); return (<div><div className="flex gap-2 overflow-x-auto pb-3">{cats.map(c => <button key={c} onClick={() => setCat(c)} className="px-3.5 py-2 rounded-full whitespace-nowrap text-sm font-semibold" style={{ background: cat === c ? C.gold : C.card, color: cat === c ? "#000" : C.white, border: `1px solid ${cat === c ? C.gold : C.border}` }}>{c}</button>)}</div><div className="space-y-2.5">{LIBRARY[cat].map((it, i) => { const locked = li.level < it.lvl; return (<button key={i} onClick={() => fireToast(locked ? `🔒 Desbloqueia no nível ${it.lvl}` : "▶ Conteúdo em breve")} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ background: C.card, border: `1px solid ${C.border}`, opacity: locked ? 0.55 : 1 }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}>{locked ? <Lock size={16} style={{ color: C.muted }} /> : <BookOpen size={16} style={{ color: C.gold }} />}</div><div className="flex-1 text-left"><p className="font-semibold text-sm">{it.t}</p><p className="text-xs" style={{ color: C.muted }}>{locked ? `Nível ${it.lvl}` : it.d}</p></div>{!locked && <ChevronRight size={16} style={{ color: C.muted }} />}</button>); })}</div></div>); }
 function ReferralView({ s, fireToast }) { const code = "VIVON-" + (s.profile.name || "VOCE").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6); const copy = () => { try { navigator.clipboard.writeText(code); fireToast("Código copiado!"); } catch { fireToast(code); } }; const tiers = [{ n: 1, r: "7 dias grátis", icon: Star }, { n: 3, r: "1 mês grátis", icon: Medal }, { n: 5, r: "Tema exclusivo Ouro", icon: Crown }]; return (<div className="space-y-4"><Card className="text-center" style={{ background: "linear-gradient(135deg, rgba(212,175,55,0.12), rgba(20,20,20,1))" }}><Gift size={28} style={{ color: C.gold }} className="mx-auto mb-2" /><p className="text-sm" style={{ color: C.muted }}>Seu código de indicação</p><p className="text-2xl font-bold tracking-wider my-2" style={{ color: C.gold }}>{code}</p><button onClick={copy} className="rounded-xl px-5 py-2.5 text-sm font-bold inline-flex items-center gap-2" style={{ background: C.gold, color: "#000" }}><Copy size={15} />Copiar código</button></Card><p className="text-sm font-semibold">Cada amigo que assinar te dá:</p><div className="space-y-2.5">{tiers.map(t => (<div key={t.n} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: C.card, border: `1px solid ${C.border}` }}><div className="rounded-lg p-2" style={{ background: "rgba(212,175,55,0.12)" }}><t.icon size={18} style={{ color: C.gold }} /></div><div className="flex-1"><p className="font-semibold text-sm">{t.r}</p><p className="text-xs" style={{ color: C.muted }}>Com {t.n} {t.n === 1 ? "indicação" : "indicações"}</p></div></div>))}</div><p className="text-xs text-center" style={{ color: C.muted }}>Indicações ativas: 0 · conecte ao backend para rastrear automaticamente.</p></div>); }
 
-function Nav({ tab, setTab }) {
-  const left = [
-    { k: "home", icon: Home, l: "Início" },
-    { k: "treinos", icon: Dumbbell, l: "Treinos" },
-    { k: "dash", icon: BarChart3, l: "Painel" },
-  ];
-  const right = [
-    { k: "metas", icon: Target, l: "Metas" },
-    { k: "ai", icon: Brain, l: "IA" },
-    { k: "profile", icon: User, l: "Perfil" },
-  ];
-  const Tab = ({ it }) => {
-    const active = tab === it.k;
-    return (
-      <button onClick={() => setTab(it.k)} className="flex flex-col items-center gap-1 py-1 flex-1">
-        <it.icon size={20} style={{ color: active ? C.gold : C.muted }} />
-        <span className="text-[9px] font-medium" style={{ color: active ? C.gold : C.muted }}>{it.l}</span>
-      </button>
-    );
-  };
-  const centerActive = tab === "track";
+function TopBar({ s, update }) {
   return (
-    <div className="fixed bottom-0 left-1/2 w-full" style={{ maxWidth: 440, transform: "translateX(-50%)", background: "rgba(10,10,10,0.92)", backdropFilter: "blur(12px)", borderTop: `1px solid ${C.border}` }}>
-      <div className="flex items-end justify-around px-1 py-2.5">
-        {left.map(it => <Tab key={it.k} it={it} />)}
-        <div className="flex-1 flex justify-center">
-          <button onClick={() => setTab("track")} className="flex flex-col items-center" style={{ marginTop: -26 }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: `linear-gradient(180deg, #EBCB6E, ${C.gold})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: centerActive ? "0 8px 24px rgba(212,175,55,0.55)" : "0 6px 18px rgba(212,175,55,0.35)", border: "3px solid #0A0A0A" }}>
-              <Zap size={26} style={{ color: "#000" }} />
-            </div>
-            <span className="text-[9px] font-bold mt-1" style={{ color: centerActive ? C.gold : C.muted }}>Evoluir</span>
-          </button>
-        </div>
-        {right.map(it => <Tab key={it.k} it={it} />)}
+    <div className="flex items-center justify-between px-5 pt-4 pb-1">
+      <Logo size={20} />
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full" style={{ background: C.card, border: `1px solid ${C.border}` }}><Rocket size={13} style={{ color: C.gold }} /><span className="text-xs font-bold">{s.voltas || 0}</span></div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full" style={{ background: C.card, border: `1px solid ${C.border}` }}><Flame size={13} style={{ color: C.gold }} /><span className="text-xs font-bold">{s.streak}</span></div>
+        <button onClick={() => update({ tab: "profile" })} className="rounded-full p-1.5" style={{ background: C.card, border: `1px solid ${C.border}` }} aria-label="Perfil"><User size={15} style={{ color: s.tab === "profile" ? C.gold : C.muted }} /></button>
       </div>
+    </div>
+  );
+}
+
+function Nav({ tab, setTab }) {
+  const items = [
+    { k: "hoje", icon: Home, l: "Hoje" },
+    { k: "treinos", icon: Dumbbell, l: "Treinos" },
+    { k: "dash", icon: TrendingUp, l: "Evolução" },
+    { k: "ai", icon: Brain, l: "IA" },
+  ];
+  const isActive = (k) => k === "hoje" ? ["hoje", "home", "track", "metas"].includes(tab) : tab === k;
+  return (
+    <div className="fixed bottom-0 left-1/2 w-full" style={{ maxWidth: 440, transform: "translateX(-50%)", background: "rgba(10,10,10,0.94)", backdropFilter: "blur(12px)", borderTop: `1px solid ${C.border}` }}>
+      <div className="flex items-end justify-around px-2 py-3">
+        {items.map(it => {
+          const active = isActive(it.k);
+          return (
+            <button key={it.k} onClick={() => setTab(it.k)} className="flex flex-col items-center gap-1 flex-1">
+              <it.icon size={21} style={{ color: active ? C.gold : C.muted }} />
+              <span className="text-[10px] font-medium" style={{ color: active ? C.gold : C.muted }}>{it.l}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ height: "env(safe-area-inset-bottom)" }} />
     </div>
   );
 }
