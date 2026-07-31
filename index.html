@@ -379,7 +379,26 @@ const DEFAULT = {
   moodByDate: {},
 };
 
+// A IA continua no mesmo endereço de sempre (Netlify).
+// Se um dia o app for pro Cloudflare, o segundo endereço entra sozinho como reserva.
 const AI_ENDPOINT = "/.netlify/functions/vivon-ai";
+const AI_ENDPOINT_RESERVA = "/vivon-ai";
+let __aiOk = null; // guarda qual endereço respondeu, pra não testar de novo
+
+async function chamarIA(payload) {
+  const tentar = async (url) => fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (__aiOk) return tentar(__aiOk);
+  let res;
+  try { res = await tentar(AI_ENDPOINT); } catch (e) { res = null; }
+  if (res && res.ok) { __aiOk = AI_ENDPOINT; return res; }
+  const res2 = await tentar(AI_ENDPOINT_RESERVA);
+  if (res2 && res2.ok) { __aiOk = AI_ENDPOINT_RESERVA; return res2; }
+  return res || res2;
+}
 
 // ======================================================
 // ACESSO: false = app aberto pra todo mundo (sem senha)
@@ -1224,10 +1243,9 @@ function DashboardTab({ s, setS }) {
     setAnalyzing(true);
     const data = `Dados do usuário ${s.profile.name}: objetivo ${goal?.t || "—"}, está voltando de "${(VOLTANDO.find(v => v.k === s.profile.voltando) || {}).t || "—"}", sequência ${s.streak} dias, já voltou ${s.voltas || 0} vezes depois de parar, score de hoje ${score}/100, consistência semanal ${cons}%, peso inicial ${iw ?? "—"}kg, peso atual ${cw ?? "—"}kg (variação ${delta ?? "—"}kg), ${s.workouts.length} treinos registrados, ${totalAi(s)} conversas com a IA, hábitos hoje ${habitsDoneToday(s)}/6, água hoje ${waterToday(s)}/8 copos.`;
     try {
-      const res = await fetch(AI_ENDPOINT, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ max_tokens: 1000, system: "Você é o Analista de Evolução do VIVON. Gere um relatório curto e profissional em português do Brasil com exatamente 4 seções, nesta ordem e com estes títulos: Pontos fortes, Pontos fracos, Sugestões e Próximos passos. Baseie cada ponto nos DADOS fornecidos, citando números reais (score, sequência, consistência, variação de peso) — nada genérico. Em Sugestões e Próximos passos, dê ações concretas e específicas para o objetivo do usuário. Tom profissional, direto e motivador, sem exagero. Cada seção com 1 a 3 frases.", messages: [{ role: "user", content: data }] }),
-      });
+      const res = await chamarIA(
+        { max_tokens: 1000, system: "Você é o Analista de Evolução do VIVON. Gere um relatório curto e profissional em português do Brasil com exatamente 4 seções, nesta ordem e com estes títulos: Pontos fortes, Pontos fracos, Sugestões e Próximos passos. Baseie cada ponto nos DADOS fornecidos, citando números reais (score, sequência, consistência, variação de peso) — nada genérico. Em Sugestões e Próximos passos, dê ações concretas e específicas para o objetivo do usuário. Tom profissional, direto e motivador, sem exagero. Cada seção com 1 a 3 frases.", messages: [{ role: "user", content: data }] }
+      );
       const d = await res.json();
       const txt = (d.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim() || "Não consegui gerar agora.";
       setS(p => ({ ...p, analysis: { date: today(), text: txt } }));
@@ -1337,7 +1355,7 @@ function AITab({ s, setS, award }) {
     setS(p => ({ ...p, chats: { ...p.chats, [mode]: history }, aiLog: { date: today(), count: (p.aiLog?.date === today() ? p.aiLog.count : 0) + 1 } }));
     setInput(""); setLoading(true); award(5);
     try {
-      const res = await fetch(AI_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ max_tokens: 1000, system: `${M.sys} ${ctx()}`, messages: history.map(m => ({ role: m.role, content: m.content })) }) });
+      const res = await chamarIA({ max_tokens: 1000, system: `${M.sys} ${ctx()}`, messages: history.map(m => ({ role: m.role, content: m.content })) });
       const data = await res.json();
       const reply = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim() || "Não consegui responder agora. Tenta de novo?";
       setS(p => ({ ...p, chats: { ...p.chats, [mode]: [...history, { role: "assistant", content: reply }] } }));
