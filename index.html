@@ -1928,6 +1928,7 @@ const DEFAULT = {
     done: {}
   },
   workouts: [],
+  cargas: {},
   meals: [],
   weights: [],
   chats: {
@@ -3155,6 +3156,7 @@ function VivonApp() {
     award: award,
     fireToast: fireToast
   }), s.tab === "treinos" && /*#__PURE__*/React.createElement(TreinosTab, {
+    s: s,
     update: update,
     award: award,
     fireToast: fireToast
@@ -4076,6 +4078,7 @@ function GuidedWorkout({
   }))));
 }
 function TreinosTab({
+  s,
   update,
   award,
   fireToast
@@ -4175,7 +4178,11 @@ function TreinosTab({
     }), " Iniciar treino guiado"), grp.exercises.map((ex, i) => /*#__PURE__*/React.createElement(ExerciseRow, {
       key: i,
       ex: ex,
-      gender: gender
+      gender: gender,
+      s: s,
+      update: update,
+      award: award,
+      fireToast: fireToast
     }))));
   })), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-center mt-5 leading-relaxed",
@@ -4192,9 +4199,141 @@ function TreinosTab({
 }
 function ExerciseRow({
   ex,
-  gender
+  gender,
+  s,
+  update,
+  award,
+  fireToast
 }) {
   const [err, setErr] = useState(false);
+  const [abrirCarga, setAbrirCarga] = useState(false);
+  const [kg, setKg] = useState("");
+  const [reps, setReps] = useState("");
+  const hist = ((s && s.cargas ? s.cargas[ex.name] : null) || []);
+  const ultima = hist[0] || null;
+  const recorde = hist.reduce((a, c) => !a || c.kg > a.kg ? c : a, null);
+  const primeira = hist.length ? hist[hist.length - 1] : null;
+  const ganho = recorde && primeira ? +(recorde.kg - primeira.kg).toFixed(1) : 0;
+  const diasDesdeRecorde = recorde ? Math.floor((new Date(today()) - new Date(recorde.date)) / 86400000) : 0;
+  const estagnado = hist.length >= 2 && diasDesdeRecorde >= 28;
+  const dataBR = iso => {
+    const [aa, mm, dd] = String(iso).slice(0, 10).split("-");
+    return dd + "/" + mm;
+  };
+  const salvarCarga = () => {
+    const vKg = parseFloat(String(kg).replace(",", "."));
+    const vRep = parseInt(reps, 10);
+    if (!vKg || vKg <= 0) return;
+    const reg = {
+      id: Date.now(),
+      date: today(),
+      kg: vKg,
+      reps: vRep > 0 ? vRep : null
+    };
+    const bateuRecorde = !recorde || vKg > recorde.kg;
+    update(p => ({
+      cargas: {
+        ...(p.cargas || {}),
+        [ex.name]: [reg, ...((p.cargas || {})[ex.name] || [])].slice(0, 60)
+      }
+    }));
+    setKg("");
+    setReps("");
+    setAbrirCarga(false);
+    if (award) award(bateuRecorde ? 30 : 15);
+    if (fireToast) fireToast(bateuRecorde ? "Novo recorde: " + vKg + " kg" : "Carga registrada");
+  };
+  const inputStyle = {
+    background: C.bg,
+    color: C.white,
+    border: `1px solid ${C.border}`
+  };
+  const PainelCarga = /*#__PURE__*/React.createElement("div", {
+    className: "px-3 pb-3"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rounded-lg p-2.5",
+    style: {
+      background: C.bg,
+      border: `1px solid ${C.border}`
+    }
+  }, ultima ? /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between mb-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-[11px]",
+    style: {
+      color: C.muted
+    }
+  }, "Última: ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: C.white
+    }
+  }, ultima.kg, " kg", ultima.reps ? " × " + ultima.reps : "")), recorde ? /*#__PURE__*/React.createElement("span", {
+    className: "text-[11px]",
+    style: {
+      color: C.gold
+    }
+  }, "Recorde ", recorde.kg, " kg") : null) : /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] mb-2",
+    style: {
+      color: C.muted
+    }
+  }, "Nenhuma carga registrada ainda."), estagnado ? /*#__PURE__*/React.createElement("div", {
+    className: "rounded-lg px-2 py-1.5 mb-2",
+    style: {
+      background: "rgba(224,83,59,0.10)",
+      border: "1px solid rgba(224,83,59,0.35)"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] font-semibold",
+    style: {
+      color: "#E0533B"
+    }
+  }, "Parado há ", diasDesdeRecorde, " dias"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[10px] leading-snug",
+    style: {
+      color: "rgba(255,255,255,0.55)"
+    }
+  }, "Seu recorde de ", recorde.kg, " kg é de ", dataBR(recorde.date), ". Tenta subir 2,5 kg no próximo treino.")) : null, ganho > 0 ? /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] mb-2",
+    style: {
+      color: C.gold
+    }
+  }, "+", ganho, " kg desde que você começou") : null, abrirCarga ? /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-1.5"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    inputMode: "decimal",
+    step: "0.5",
+    value: kg,
+    onChange: e => setKg(e.target.value),
+    onKeyDown: e => e.key === "Enter" && salvarCarga(),
+    placeholder: "kg",
+    className: "flex-1 min-w-0 rounded-lg px-2 py-1.5 text-xs outline-none",
+    style: inputStyle
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    inputMode: "numeric",
+    value: reps,
+    onChange: e => setReps(e.target.value),
+    onKeyDown: e => e.key === "Enter" && salvarCarga(),
+    placeholder: "reps",
+    className: "flex-1 min-w-0 rounded-lg px-2 py-1.5 text-xs outline-none",
+    style: inputStyle
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: salvarCarga,
+    className: "rounded-lg px-3 py-1.5 text-xs font-semibold shrink-0",
+    style: {
+      background: C.gold,
+      color: "#000"
+    }
+  }, "Salvar")) : /*#__PURE__*/React.createElement("button", {
+    onClick: () => setAbrirCarga(true),
+    className: "w-full rounded-lg py-1.5 text-[11px] font-medium",
+    style: {
+      border: `1px solid ${C.border}`,
+      color: C.gold
+    }
+  }, "Registrar carga")));
   return /*#__PURE__*/React.createElement("div", {
     className: "rounded-xl overflow-hidden",
     style: {
@@ -4268,7 +4407,7 @@ function ExerciseRow({
     style: {
       color: "rgba(255,255,255,0.3)"
     }
-  }, ex.name, " · ", gender))));
+  }, ex.name, " · ", gender))), PainelCarga);
 }
 function DashboardTab({
   s,
@@ -5542,13 +5681,6 @@ function ProfileTab({
       window.removeEventListener("pwa-installed", off);
     };
   }, []);
-  if (view === "library") return /*#__PURE__*/React.createElement(Panel, {
-    title: "Guias da VIVON",
-    onBack: () => setView("hub")
-  }, /*#__PURE__*/React.createElement(LibraryView, {
-    s: s,
-    fireToast: fireToast
-  }));
   if (view === "edit") return /*#__PURE__*/React.createElement(Panel, {
     title: "Editar perfil",
     onBack: () => setView("hub")
@@ -5585,7 +5717,10 @@ function ProfileTab({
     title: "Histórico de peso",
     onBack: () => setView("hub")
   }, /*#__PURE__*/React.createElement(WeightChartView, {
-    s: s
+    s: s,
+    update: update,
+    award: award,
+    fireToast: fireToast
   }));
   const g = GOALS.find(x => x.k === s.profile.goal);
   const items = [{
@@ -5598,11 +5733,6 @@ function ProfileTab({
     t: "Fotos de progresso",
     icon: Activity,
     sub: "Seu antes e depois"
-  }, {
-    k: "library",
-    t: "Guias da VIVON",
-    icon: BookOpen,
-    sub: "Feitos pra você"
   }, {
     k: "share",
     t: "Compartilhar evolução",
@@ -5872,18 +6002,71 @@ function WeeklySummaryView({
   }, activeDays >= 6 ? "Semana impecável. Você é constância pura." : activeDays >= 4 ? "Boa semana! Dá pra subir mais ainda." : activeDays >= 1 ? "Você começou. Próxima semana, mais um passo." : "Bora ativar essa semana?"));
 }
 function WeightChartView({
-  s
+  s,
+  update,
+  award,
+  fireToast
 }) {
+  const [novoPeso, setNovoPeso] = useState("");
+  const registrarPeso = () => {
+    const v = parseFloat(String(novoPeso).replace(",", "."));
+    if (!v || v <= 0) return;
+    update(p => ({
+      weights: [{
+        id: Date.now(),
+        date: today(),
+        val: v
+      }, ...(p.weights || [])]
+    }));
+    setNovoPeso("");
+    if (award) award(10);
+    if (fireToast) fireToast("Peso registrado");
+  };
+  const Registrar = /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-4 mb-4",
+    style: {
+      background: C.card,
+      border: `1px solid ${C.border}`
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-xs mb-2",
+    style: {
+      color: C.muted
+    }
+  }, "Registrar peso de hoje"), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    inputMode: "decimal",
+    step: "0.1",
+    value: novoPeso,
+    onChange: e => setNovoPeso(e.target.value),
+    onKeyDown: e => e.key === "Enter" && registrarPeso(),
+    placeholder: "kg",
+    className: "flex-1 rounded-xl px-3 py-2 text-sm outline-none",
+    style: {
+      background: C.bg,
+      color: C.white,
+      border: `1px solid ${C.border}`
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: registrarPeso,
+    className: "rounded-xl px-4 py-2 text-sm font-semibold",
+    style: {
+      background: C.gold,
+      color: "#000"
+    }
+  }, "Salvar")));
   const ws = (s.weights || []).slice().reverse();
   if (ws.length < 2) {
     return /*#__PURE__*/React.createElement("div", {
       className: "space-y-4"
-    }, /*#__PURE__*/React.createElement("p", {
+    }, Registrar, /*#__PURE__*/React.createElement("p", {
       className: "text-sm leading-relaxed",
       style: {
         color: C.muted
       }
-    }, "Registre seu peso pelo menos 2 vezes (na aba Evoluir) pra ver aqui o gráfico da sua evolução."), ws.length === 1 ? /*#__PURE__*/React.createElement("p", {
+    }, "Registre seu peso pelo menos 2 vezes pra ver aqui o gráfico da sua evolução."), ws.length === 1 ? /*#__PURE__*/React.createElement("p", {
       className: "text-sm",
       style: {
         color: C.white
@@ -5912,7 +6095,7 @@ function WeightChartView({
     delta = +(last - first).toFixed(1);
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-5"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, Registrar, /*#__PURE__*/React.createElement("div", {
     className: "flex items-end justify-between"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
     className: "text-xs",
