@@ -1929,6 +1929,14 @@ const DEFAULT = {
   },
   workouts: [],
   cargas: {},
+  micro: {
+    date: "",
+    idx: null
+  },
+  checkin: {
+    week: "",
+    text: ""
+  },
   meals: [],
   weights: [],
   chats: {
@@ -5092,6 +5100,155 @@ function TrackTab({
   const todayWeights = s.weights.filter(w => w.date === t);
   const diarioHoje = s.diario && s.diario[t] ? s.diario[t] : "";
   const [verHistorico, setVerHistorico] = useState(false);
+  const [diaDificil, setDiaDificil] = useState(false);
+  const [carregandoCheckin, setCarregandoCheckin] = useState(false);
+  const ehDomingo = new Date().getDay() === 0;
+  const checkinFeito = (s.checkin || {}).week === t;
+  const gerarCheckin = async () => {
+    setCarregandoCheckin(true);
+    try {
+      const dias = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        dias.push(d.toISOString().slice(0, 10));
+      }
+      const treinos = (s.workouts || []).filter(w => dias.includes(w.date));
+      const pesos = (s.weights || []).filter(w => dias.includes(w.date));
+      const ativos = dias.filter(d => (s.xpByDate || {})[d] > 0).length;
+      const cargasSemana = [];
+      Object.keys(s.cargas || {}).forEach(nome => {
+        (s.cargas[nome] || []).forEach(c => {
+          if (dias.includes(c.date)) cargasSemana.push(nome + ": " + c.kg + "kg");
+        });
+      });
+      const resumo = ["Objetivo: " + (s.profile.goal || "n\u00e3o definido"), "Dias ativos na semana: " + ativos + " de 7", "Sequ\u00eancia atual: " + s.streak + " dias", "Treinos registrados: " + treinos.length + (treinos.length ? " (" + treinos.map(w => w.name).join(", ") + ")" : ""), "Pesos registrados: " + (pesos.length ? pesos.map(w => w.val + "kg").join(", ") : "nenhum"), "Cargas da semana: " + (cargasSemana.length ? cargasSemana.join("; ") : "nenhuma"), "VIVON Score hoje: " + vivonScore(s)].join("\n");
+      const res = await chamarIA({
+        max_tokens: 500,
+        system: "Voc\u00ea \u00e9 o check-in semanal do VIVON. Escreva em portugu\u00eas do Brasil, no m\u00e1ximo 5 frases curtas, em 3 partes sem t\u00edtulos: (1) o que subiu essa semana, citando n\u00fameros reais; (2) o que caiu ou ficou parado, com honestidade e sem suavizar; (3) uma \u00fanica a\u00e7\u00e3o concreta para a pr\u00f3xima semana. Nada gen\u00e9rico, nada de elogio vazio. Se os dados forem escassos, diga isso diretamente.",
+        messages: [{
+          role: "user",
+          content: resumo
+        }]
+      });
+      const d = await res.json();
+      const txt = (d.content || []).filter(b => b.type === "text").map(b => b.text).join("\n").trim() || "N\u00e3o consegui gerar agora.";
+      update(() => ({
+        checkin: {
+          week: t,
+          text: txt
+        }
+      }));
+      award(20);
+    } catch (e) {
+      if (fireToast) fireToast("N\u00e3o consegui gerar o check-in agora");
+    }
+    setCarregandoCheckin(false);
+  };
+  const CardCheckin = !ehDomingo ? null : /*#__PURE__*/React.createElement(Card, {
+    style: {
+      border: `1px solid ${C.gold}55`
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mb-1",
+    style: {
+      color: C.gold
+    }
+  }, "Check-in de domingo"), checkinFeito ? /*#__PURE__*/React.createElement("p", {
+    className: "text-xs leading-relaxed whitespace-pre-line",
+    style: {
+      color: "#D8D8D8"
+    }
+  }, (s.checkin || {}).text) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    className: "text-xs leading-relaxed mb-3",
+    style: {
+      color: C.muted
+    }
+  }, "Fecha a semana com os n\u00fameros na m\u00e3o. Sem elogio de gra\u00e7a."), /*#__PURE__*/React.createElement("button", {
+    onClick: gerarCheckin,
+    disabled: carregandoCheckin,
+    className: "w-full rounded-xl py-2 text-xs font-semibold",
+    style: {
+      background: carregandoCheckin ? C.cardL : C.gold,
+      color: carregandoCheckin ? C.muted : "#000"
+    }
+  }, carregandoCheckin ? "Analisando sua semana..." : "Ver minha semana")));
+  const MICRO = [{
+    t: "3 minutos de caminhada",
+    d: "Sai da porta e volta. Só isso."
+  }, {
+    t: "10 agachamentos",
+    d: "Onde você estiver, agora."
+  }, {
+    t: "2 minutos de silêncio",
+    d: "Sem celular. Só respirar."
+  }];
+  const microFeito = (s.micro || {}).date === t;
+  const fazerMicro = idx => {
+    update(p => ({
+      micro: {
+        date: t,
+        idx: idx
+      }
+    }));
+    award(15);
+    setDiaDificil(false);
+    if (fireToast) fireToast("Sequência mantida");
+  };
+  const CardDiaDificil = /*#__PURE__*/React.createElement(Card, {
+    style: {
+      border: `1px solid ${C.border}`
+    }
+  }, microFeito ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mb-1",
+    style: {
+      color: C.gold
+    }
+  }, "Você apareceu hoje"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs leading-relaxed",
+    style: {
+      color: C.muted
+    }
+  }, "Dia difícil resolvido. A sequência continua — e isso é o que conta.")) : !diaDificil ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mb-1"
+  }, "Hoje tá difícil?"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs leading-relaxed mb-3",
+    style: {
+      color: C.muted
+    }
+  }, "Melhor fazer pouco do que quebrar tudo. Escolhe uma coisa de 3 minutos."), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setDiaDificil(true),
+    className: "w-full rounded-xl py-2 text-xs font-semibold",
+    style: {
+      border: `1px solid ${C.border}`,
+      color: C.gold
+    }
+  }, "Ver opções")) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    className: "text-sm font-semibold mb-2"
+  }, "Escolhe uma"), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-2"
+  }, MICRO.map((m, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    onClick: () => fazerMicro(i),
+    className: "w-full text-left rounded-xl px-3 py-2.5",
+    style: {
+      background: C.bg,
+      border: `1px solid ${C.border}`
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-xs font-semibold"
+  }, m.t), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px]",
+    style: {
+      color: C.muted
+    }
+  }, m.d)))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setDiaDificil(false),
+    className: "w-full mt-2 py-1.5 text-[11px]",
+    style: {
+      color: C.muted
+    }
+  }, "cancelar")));
   const diasComTexto = Object.keys(s.diario || {}).filter(d => d !== t && (s.diario[d] || "").trim()).sort().reverse().slice(0, 14);
   const escreverDiario = txt => {
     let ganhou = false;
@@ -5170,7 +5327,7 @@ function TrackTab({
     style: {
       color: C.gold
     }
-  }), "Evoluir hoje"), /*#__PURE__*/React.createElement(Card, {
+  }), "Evoluir hoje"), CardCheckin, CardDiaDificil, /*#__PURE__*/React.createElement(Card, {
     style: {
       background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(20,20,20,1))"
     }
@@ -5713,6 +5870,12 @@ function ProfileTab({
     s: s,
     fireToast: fireToast
   }));
+  if (view === "mes") return /*#__PURE__*/React.createElement(Panel, {
+    title: "Relat\u00f3rio do m\u00eas",
+    onBack: () => setView("hub")
+  }, /*#__PURE__*/React.createElement(RelatorioMensal, {
+    s: s
+  }));
   if (view === "weight") return /*#__PURE__*/React.createElement(Panel, {
     title: "Histórico de peso",
     onBack: () => setView("hub")
@@ -5733,6 +5896,11 @@ function ProfileTab({
     t: "Fotos de progresso",
     icon: Activity,
     sub: "Seu antes e depois"
+  }, {
+    k: "mes",
+    t: "Relat\u00f3rio do m\u00eas",
+    icon: Calendar,
+    sub: "Seus n\u00fameros pra postar"
   }, {
     k: "share",
     t: "Compartilhar evolução",
@@ -6000,6 +6168,77 @@ function WeeklySummaryView({
       color: C.gold
     }
   }, activeDays >= 6 ? "Semana impecável. Você é constância pura." : activeDays >= 4 ? "Boa semana! Dá pra subir mais ainda." : activeDays >= 1 ? "Você começou. Próxima semana, mais um passo." : "Bora ativar essa semana?"));
+}
+function RelatorioMensal({
+  s
+}) {
+  const agora = new Date();
+  const ano = agora.getFullYear();
+  const mes = agora.getMonth();
+  const nomeMes = ["Janeiro", "Fevereiro", "Mar\u00e7o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"][mes];
+  const noMes = iso => {
+    const d = new Date(iso + "T00:00:00");
+    return d.getFullYear() === ano && d.getMonth() === mes;
+  };
+  const diasAtivos = Object.keys(s.xpByDate || {}).filter(d => noMes(d) && s.xpByDate[d] > 0).length;
+  const treinos = (s.workouts || []).filter(w => noMes(w.date)).length;
+  const pesosMes = (s.weights || []).filter(w => noMes(w.date)).slice().reverse();
+  const varPeso = pesosMes.length >= 2 ? +(pesosMes[pesosMes.length - 1].val - pesosMes[0].val).toFixed(1) : null;
+  let recordes = 0;
+  Object.keys(s.cargas || {}).forEach(nome => {
+    const lista = (s.cargas[nome] || []).slice().reverse();
+    let max = 0;
+    lista.forEach(c => {
+      if (c.kg > max) {
+        if (max > 0 && noMes(c.date)) recordes++;
+        max = c.kg;
+      }
+    });
+  });
+  const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+  const pct = Math.round(diasAtivos / diasNoMes * 100);
+  const Linha = (rot, val, destaque) => /*#__PURE__*/React.createElement("div", {
+    className: "flex items-baseline justify-between py-2",
+    style: {
+      borderBottom: `1px solid ${C.border}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "text-xs",
+    style: {
+      color: C.muted
+    }
+  }, rot), /*#__PURE__*/React.createElement("span", {
+    className: "text-lg font-bold",
+    style: {
+      color: destaque ? C.gold : C.white
+    }
+  }, val));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rounded-2xl p-5",
+    style: {
+      background: "linear-gradient(135deg, rgba(212,175,55,0.10), rgba(20,20,20,1))",
+      border: `1px solid ${C.border}`
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "text-[10px] tracking-widest uppercase mb-1",
+    style: {
+      color: C.gold
+    }
+  }, nomeMes, " de ", ano), /*#__PURE__*/React.createElement("p", {
+    className: "text-2xl font-bold mb-4"
+  }, s.profile.name || "Minha evolu\u00e7\u00e3o"), Linha("Dias ativos", diasAtivos + "/" + diasNoMes, true), Linha("Consist\u00eancia", pct + "%"), Linha("Treinos", treinos), Linha("Recordes batidos", recordes, recordes > 0), varPeso !== null ? Linha("Varia\u00e7\u00e3o de peso", (varPeso > 0 ? "+" : "") + varPeso + " kg") : null, Linha("Melhor sequ\u00eancia", (s.melhorSeq || 0) + " dias"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[10px] text-center mt-4 tracking-widest",
+    style: {
+      color: C.gold
+    }
+  }, "VIVON")), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs leading-relaxed text-center",
+    style: {
+      color: C.muted
+    }
+  }, "Tira print deste card e posta. N\u00famero seu, evolu\u00e7\u00e3o sua."));
 }
 function WeightChartView({
   s,
